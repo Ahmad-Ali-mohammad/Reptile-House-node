@@ -21,7 +21,7 @@ interface DatabaseContextType {
   createOrder: (order: Order) => Promise<Order | null>;
   updateOrder: (id: string, status: Order['status']) => void;
   deleteOrder: (id: string) => void;
-  updateOrderPaymentStatus: (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string) => void;
+  updateOrderPaymentStatus: (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, nextStatus?: Order['status']) => void;
   addArticle: (article: Article) => void;
   deleteArticle: (id: number) => void;
   saveHeroSlide: (slide: HeroSlide) => void;
@@ -48,6 +48,15 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [backendAvailable, setBackendAvailable] = useState(true);
   const isManager = user?.role === 'admin' || user?.role === 'manager';
 
+  const readArrayResult = <T,>(label: string, result: PromiseSettledResult<T[]>) => {
+    if (result.status === 'fulfilled') {
+      return Array.isArray(result.value) ? result.value : [];
+    }
+
+    console.error(`Failed to load ${label}:`, result.reason);
+    return [];
+  };
+
   const refreshData = useCallback(() => {
     setLoading(true);
     const baseRequests = [
@@ -62,16 +71,27 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
         ? [api.getMyOrders(), api.getAddresses(), Promise.resolve([] as User[])]
         : [Promise.resolve([] as Order[]), Promise.resolve([] as Address[]), Promise.resolve([] as User[])];
 
-    Promise.all([...baseRequests, ...protectedRequests])
-      .then(([p, ar, h, s, o, a, u]) => {
-        setProducts(Array.isArray(p) ? p : []);
-        setArticles(Array.isArray(ar) ? ar : []);
-        setHeroSlides(Array.isArray(h) ? h : []);
-        setSupplies(Array.isArray(s) ? s : []);
-        setOrders(Array.isArray(o) ? o : []);
-        setAddresses(Array.isArray(a) ? a : []);
-        setUsers(Array.isArray(u) ? u : []);
-        setBackendAvailable(true);
+    Promise.allSettled([...baseRequests, ...protectedRequests])
+      .then((results) => {
+        const [productsResult, articlesResult, heroResult, suppliesResult, ordersResult, addressesResult, usersResult] = results as [
+          PromiseSettledResult<Reptile[]>,
+          PromiseSettledResult<Article[]>,
+          PromiseSettledResult<HeroSlide[]>,
+          PromiseSettledResult<Supply[]>,
+          PromiseSettledResult<Order[]>,
+          PromiseSettledResult<Address[]>,
+          PromiseSettledResult<User[]>,
+        ];
+
+        setProducts(readArrayResult('products', productsResult));
+        setArticles(readArrayResult('articles', articlesResult));
+        setHeroSlides(readArrayResult('hero slides', heroResult));
+        setSupplies(readArrayResult('supplies', suppliesResult));
+        setOrders(readArrayResult('orders', ordersResult));
+        setAddresses(readArrayResult('addresses', addressesResult));
+        setUsers(readArrayResult('users', usersResult));
+
+        setBackendAvailable(results.every((result) => result.status === 'fulfilled'));
       })
       .catch((error) => {
         console.error(error);
@@ -135,8 +155,8 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     api.deleteOrder(id).then(() => refreshData()).catch(console.error);
   };
 
-  const updateOrderPaymentStatus = (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string) => {
-    api.updateOrderPaymentStatus(orderId, paymentStatus, rejectionReason).then(() => refreshData()).catch(console.error);
+  const updateOrderPaymentStatus = (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, nextStatus?: Order['status']) => {
+    api.updateOrderPaymentStatus(orderId, paymentStatus, rejectionReason, nextStatus).then(() => refreshData()).catch(console.error);
   };
 
   const updateUser = (user: User) => {
