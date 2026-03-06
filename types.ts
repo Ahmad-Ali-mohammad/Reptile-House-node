@@ -92,6 +92,16 @@ export interface MediaItem {
   createdAt?: string;
 }
 
+export interface MediaUploadResult {
+  url: string;
+  name: string;
+  size: string;
+  bytes: number;
+  mimeType: string;
+  fileType: string;
+  storedName: string;
+}
+
 export interface MediaFolder {
   id: string;
   name: string;
@@ -285,4 +295,63 @@ export interface TeamMember {
   imageUrl: string;
   bio?: string;
   isActive: boolean;
+}
+
+export interface DatabaseStatusError {
+  message: string;
+  code?: string | null;
+  errno?: number | null;
+  sqlState?: string | null;
+  syscall?: string | null;
+}
+
+export interface DatabaseStatus {
+  connected: boolean;
+  checkedAt: string;
+  latencyMs: number | null;
+  dbType: string;
+  connectionMethod: string;
+  configured: boolean;
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  passwordConfigured: boolean;
+  sslEnabled: boolean;
+  pool: {
+    waitForConnections: boolean;
+    connectionLimit: number;
+    queueLimit: number;
+    charset: string;
+  };
+  server?: {
+    version?: string;
+    versionComment?: string;
+    currentDatabase?: string;
+    serverHost?: string;
+    serverPort?: number;
+    characterSet?: string;
+    collation?: string;
+    currentUser?: string;
+  };
+  runtime?: {
+    nodeVersion: string;
+    pid: number;
+    uptimeSeconds: number;
+  };
+  tableSummary?: {
+    count: number;
+    totalApproxRows: number;
+    totalSizeMb: number;
+  };
+  tables?: Array<{
+    tableName: string;
+    engine: string;
+    approxRows: number;
+    sizeMb: number;
+    collation: string;
+    createdAt?: string;
+    updatedAt?: string;
+  }>;
+  error?: DatabaseStatusError | null;
 }

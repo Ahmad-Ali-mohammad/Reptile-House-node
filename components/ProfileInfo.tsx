@@ -1,8 +1,9 @@
-
+﻿
 import React, { useState, useRef } from 'react';
 import { User } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { PlusIcon } from './icons';
+import { IMAGE_FILE_ACCEPT, mediaService } from '../services/media';
 
 interface ProfileInfoProps {
     user: User;
@@ -14,22 +15,32 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
     const [name, setName] = useState(user.name);
     const [email, setEmail] = useState(user.email);
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64 = reader.result as string;
-                setProfilePic(base64);
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        try {
+            mediaService.validateImageFile(file);
+            setIsUploadingAvatar(true);
+            const avatarUrl = await mediaService.uploadProjectImage(file, 'avatars');
+            setProfilePic(avatarUrl);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„Ø´Ø®ØµÙŠØ©');
+        } finally {
+            setIsUploadingAvatar(false);
+            e.target.value = '';
         }
     };
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
+        if (isUploadingAvatar) {
+            alert('Ø§Ù†ØªØ¸Ø± Ø­ØªÙ‰ ÙŠÙƒØªÙ…Ù„ Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„Ø´Ø®ØµÙŠØ© Ø£ÙˆÙ„Ø§Ù‹');
+            return;
+        }
         setIsSaving(true);
         setTimeout(() => {
             updateProfile({
@@ -38,13 +49,13 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                 avatarUrl: profilePic || undefined
             });
             setIsSaving(false);
-            alert('تم حفظ التغييرات بنجاح!');
+            alert('ØªÙ… Ø­ÙØ¸ Ø§Ù„ØªØºÙŠÙŠØ±Ø§Øª Ø¨Ù†Ø¬Ø§Ø­!');
         }, 800);
     };
 
     return (
         <div className="text-right">
-            <h2 className="text-3xl font-bold mb-10">مرحباً، {user.name}!</h2>
+            <h2 className="text-3xl font-bold mb-10">Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ {user.name}!</h2>
             
             <div className="flex flex-col md:flex-row-reverse gap-10 items-start">
                 {/* Avatar Upload Section */}
@@ -61,18 +72,23 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                                 <span className="text-[10px] text-amber-500 font-black uppercase">Upload</span>
                             </div>
                         )}
+                        {isUploadingAvatar ? (
+                            <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-[10px] text-white font-black uppercase">
+                                Uploading
+                            </div>
+                        ) : null}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                             <span className="text-[10px] text-white font-black uppercase">تغيير</span>
+                             <span className="text-[10px] text-white font-black uppercase">ØªØºÙŠÙŠØ±</span>
                         </div>
                     </div>
-                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+                    <input type="file" ref={fileInputRef} className="hidden" accept={IMAGE_FILE_ACCEPT} onChange={handleFileChange} />
                 </div>
 
                 {/* Form Fields */}
                 <form className="flex-1 w-full space-y-6" onSubmit={handleSave}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">الاسم الكامل</label>
+                            <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„</label>
                             <input 
                                 required
                                 type="text" 
@@ -82,7 +98,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">البريد الإلكتروني</label>
+                            <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ</label>
                             <input 
                                 required
                                 type="email" 
@@ -93,7 +109,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">كلمة المرور الحالية</label>
+                        <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø­Ø§Ù„ÙŠØ©</label>
                         <input 
                             type="password" 
                             placeholder="********" 
@@ -103,10 +119,10 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                     <div className="pt-4">
                         <button 
                             type="submit" 
-                            disabled={isSaving}
+                            disabled={isSaving || isUploadingAvatar}
                             className={`bg-amber-500 text-gray-900 font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-amber-500/20 active:scale-95 ${isSaving ? 'opacity-50 cursor-wait' : 'hover:bg-amber-400'}`}
                         >
-                            {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+                            {isSaving ? 'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø­ÙØ¸...' : 'Ø­ÙØ¸ Ø§Ù„ØªØºÙŠÙŠØ±Ø§Øª'}
                         </button>
                     </div>
                 </form>
@@ -116,3 +132,4 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
 }
 
 export default ProfileInfo;
+

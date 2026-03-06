@@ -1,4 +1,5 @@
 import * as MediaModel from '../models/MediaModel.js';
+import { storeUploadedBuffer, storeUploadedFile } from '../utils/mediaStorage.js';
 
 export async function list(req, res) {
   try {
@@ -33,6 +34,31 @@ export async function create(req, res) {
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+}
+
+export async function uploadFile(req, res) {
+  try {
+    const { dataUrl, fileName, mimeType, category } = req.body || {};
+
+    if (req.file) {
+      const file = await storeUploadedBuffer({
+        buffer: req.file.buffer,
+        fileName: req.file.originalname || fileName,
+        mimeType: req.file.mimetype || mimeType,
+        category,
+      });
+      return res.status(201).json(file);
+    }
+
+    if (!dataUrl || !fileName) {
+      return res.status(400).json({ error: 'File payload is required' });
+    }
+
+    const file = await storeUploadedFile({ dataUrl, fileName, mimeType, category });
+    res.status(201).json(file);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
   }
 }
 

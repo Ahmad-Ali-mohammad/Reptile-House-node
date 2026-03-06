@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Order } from '../types';
 import { ChevronDownIcon } from './icons';
@@ -46,7 +45,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, setPage }) => {
                 <div className="mt-6 pt-6 border-t border-white/20">
                     <h4 className="font-bold mb-4">تفاصيل الطلب:</h4>
                     <div className="space-y-4">
-                        {order.items.map(item => (
+                        {order.items.map((item) => (
                             <div key={item.reptileId} className="flex items-center space-x-4 space-x-reverse">
                                 <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
                                 <div className="flex-1">
@@ -58,8 +57,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, setPage }) => {
                         ))}
                     </div>
                     <div className="text-left mt-4">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setPage('orderTracking'); }}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setPage(`orderTracking/${order.id}` as Page); }}
                             className="bg-gray-500/50 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-gray-500/80 transition-colors"
                         >
                             تتبع الطلب

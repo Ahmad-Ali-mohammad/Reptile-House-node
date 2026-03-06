@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import * as productController from '../controllers/productController.js';
 import * as orderController from '../controllers/orderController.js';
 import * as userController from '../controllers/userController.js';
@@ -18,11 +19,17 @@ import * as mediaController from '../controllers/mediaController.js';
 import * as mediaFolderController from '../controllers/mediaFolderController.js';
 import * as userPreferencesController from '../controllers/userPreferencesController.js';
 import * as serviceController from '../controllers/serviceController.js';
+import * as systemController from '../controllers/systemController.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
+import { MAX_UPLOAD_BYTES } from '../utils/mediaStorage.js';
 
 const router = Router();
 const manageRoles = ['admin', 'manager'];
 const editorRoles = ['admin', 'manager', 'editor'];
+const mediaUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_UPLOAD_BYTES },
+});
 
 // Auth
 router.post('/auth/login', authController.login);
@@ -31,8 +38,8 @@ router.post('/auth/bootstrap-admin', authController.bootstrapAdmin);
 
 // Users
 router.get('/users', requireRoles(...manageRoles), userController.list);
-router.get('/users/:id', requireRoles(...manageRoles), userController.get);
-router.put('/users/:id', requireRoles(...manageRoles), userController.update);
+router.get('/users/:id', requireAuth, userController.get);
+router.put('/users/:id', requireAuth, userController.update);
 
 // Products
 router.get('/products', productController.list);
@@ -43,6 +50,7 @@ router.delete('/products/:id', requireRoles(...editorRoles), productController.r
 
 // Orders
 router.get('/orders', requireRoles(...manageRoles), orderController.list);
+router.get('/orders/my', requireAuth, orderController.listMine);
 router.get('/orders/:id', requireRoles(...manageRoles), orderController.get);
 router.post('/orders', requireAuth, orderController.create);
 router.put('/orders/:id', requireRoles(...manageRoles), orderController.update);
@@ -140,6 +148,7 @@ router.delete('/page-contents/:id', requireRoles(...editorRoles), pageContentCon
 // Media library
 router.get('/media', mediaController.list);
 router.get('/media/:id', mediaController.get);
+router.post('/media/upload-file', requireAuth, mediaUpload.single('file'), mediaController.uploadFile);
 router.post('/media', requireRoles(...editorRoles), mediaController.create);
 router.put('/media/:id', requireRoles(...editorRoles), mediaController.update);
 router.delete('/media/:id', requireRoles(...editorRoles), mediaController.remove);
@@ -155,5 +164,8 @@ router.delete('/media-folders/:id', requireRoles(...editorRoles), mediaFolderCon
 // User preferences
 router.get('/user-preferences', requireAuth, userPreferencesController.get);
 router.put('/user-preferences', requireAuth, userPreferencesController.update);
+
+// System
+router.get('/system/db-status', requireRoles(...manageRoles), systemController.getDatabaseStatus);
 
 export default router;

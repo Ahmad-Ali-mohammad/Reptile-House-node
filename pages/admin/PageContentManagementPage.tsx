@@ -93,7 +93,71 @@ const defaultPages: PageContent[] = [
     isActive: true,
     updatedAt: new Date().toISOString().slice(0, 10),
   },
+  {
+    id: 'page-services',
+    slug: 'services',
+    title: 'الخدمات',
+    excerpt: 'محتوى صفحة الخدمات.',
+    content: '',
+    seoTitle: 'الخدمات - بيت الزواحف',
+    seoDescription: 'خدمات بيت الزواحف المتاحة للعملاء.',
+    isActive: true,
+    updatedAt: new Date().toISOString().slice(0, 10),
+  },
+  {
+    id: 'page-offers',
+    slug: 'offers',
+    title: 'العروض',
+    excerpt: 'محتوى صفحة العروض الترويجية.',
+    content: '',
+    seoTitle: 'العروض - بيت الزواحف',
+    seoDescription: 'العروض الحالية في بيت الزواحف.',
+    isActive: true,
+    updatedAt: new Date().toISOString().slice(0, 10),
+  },
+  {
+    id: 'page-showcase',
+    slug: 'showcase',
+    title: 'المعرض',
+    excerpt: 'محتوى صفحة المعرض.',
+    content: '',
+    seoTitle: 'المعرض - بيت الزواحف',
+    seoDescription: 'استعرض جميع الزواحف المتاحة.',
+    isActive: true,
+    updatedAt: new Date().toISOString().slice(0, 10),
+  },
+  {
+    id: 'page-supplies',
+    slug: 'supplies',
+    title: 'المستلزمات',
+    excerpt: 'محتوى صفحة المستلزمات.',
+    content: '',
+    seoTitle: 'المستلزمات - بيت الزواحف',
+    seoDescription: 'كل مستلزمات الزواحف في مكان واحد.',
+    isActive: true,
+    updatedAt: new Date().toISOString().slice(0, 10),
+  },
+  {
+    id: 'page-blog',
+    slug: 'blog',
+    title: 'المدونة',
+    excerpt: 'محتوى صفحة المدونة.',
+    content: '',
+    seoTitle: 'المدونة - بيت الزواحف',
+    seoDescription: 'مقالات ونصائح حول رعاية الزواحف.',
+    isActive: true,
+    updatedAt: new Date().toISOString().slice(0, 10),
+  },
 ];
+
+const coreSlugs = new Set(defaultPages.map((p) => p.slug));
+
+const mergeWithDefaultPages = (rows: PageContent[]): PageContent[] => {
+  const bySlug = new Map(rows.map((row) => [row.slug, row] as const));
+  const orderedCore = defaultPages.map((core) => bySlug.get(core.slug) || core);
+  const extras = rows.filter((row) => !coreSlugs.has(row.slug));
+  return [...orderedCore, ...extras];
+};
 
 const PageContentManagementPage: React.FC = () => {
   const [contents, setContents] = useState<PageContent[]>([]);
@@ -102,18 +166,25 @@ const PageContentManagementPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PageContent | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string | null }>({ isOpen: false, id: null });
+  const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string | null; slug: string | null }>({
+    isOpen: false,
+    id: null,
+    slug: null,
+  });
 
   const loadContents = async () => {
     setIsLoading(true);
     setError('');
     try {
-      const rows = await api.getPageContents();
-      if (rows.length === 0) {
-        setContents(defaultPages);
-      } else {
-        setContents(rows);
+      let rows = await api.getPageContents();
+      const missingCorePages = defaultPages.filter((core) => !rows.some((row) => row.slug === core.slug));
+
+      if (missingCorePages.length > 0) {
+        await Promise.all(missingCorePages.map((page) => api.savePageContent(page)));
+        rows = await api.getPageContents();
       }
+
+      setContents(mergeWithDefaultPages(rows));
     } catch (e) {
       setError('تعذر تحميل محتوى الصفحات');
       setContents(defaultPages);
@@ -172,8 +243,8 @@ const PageContentManagementPage: React.FC = () => {
       await loadContents();
       setIsModalOpen(false);
       setEditingItem(null);
-    } catch {
-      setError('تعذر حفظ محتوى الصفحة');
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : 'تعذر حفظ محتوى الصفحة');
     } finally {
       setIsSaving(false);
     }
@@ -182,13 +253,18 @@ const PageContentManagementPage: React.FC = () => {
   const handleDelete = async () => {
     const id = confirmDelete.id;
     if (!id) return;
+    if (confirmDelete.slug && coreSlugs.has(confirmDelete.slug)) {
+      setError('لا يمكن حذف صفحة رئيسية. يمكنك تعطيلها أو تعديل محتواها.');
+      setConfirmDelete({ isOpen: false, id: null, slug: null });
+      return;
+    }
     try {
       await api.deletePageContent(id);
       await loadContents();
-    } catch {
-      setError('تعذر حذف المحتوى');
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : 'تعذر حذف المحتوى');
     } finally {
-      setConfirmDelete({ isOpen: false, id: null });
+      setConfirmDelete({ isOpen: false, id: null, slug: null });
     }
   };
 
@@ -244,19 +320,34 @@ const PageContentManagementPage: React.FC = () => {
         <div className="glass-medium rounded-[2rem] border border-white/10 p-10 text-center text-gray-400 font-bold">جاري تحميل المحتوى...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {contents.map((item) => (
+          {contents.map((item) => {
+            const isCorePage = coreSlugs.has(item.slug);
+            return (
             <div key={item.id} className={`glass-dark border rounded-[2rem] p-6 transition-all ${item.isActive ? 'border-white/10' : 'border-gray-500/30 opacity-70'}`}>
               <div className="space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="text-xl font-black mb-1">{item.title}</h3>
-                    <p className="text-xs text-amber-400 font-bold">/{item.slug}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-amber-400 font-bold">/{item.slug}</p>
+                      {isCorePage && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                          رئيسية
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => handleOpenEdit(item)} className="p-2 bg-white/5 text-gray-300 hover:text-amber-400 rounded-lg transition-all border border-white/10" aria-label="تعديل المحتوى">
                       <EditIcon className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setConfirmDelete({ isOpen: true, id: item.id })} className="p-2 bg-red-500/5 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all border border-red-500/30" aria-label="حذف المحتوى">
+                    <button
+                      onClick={() => setConfirmDelete({ isOpen: true, id: item.id, slug: item.slug })}
+                      disabled={isCorePage}
+                      title={isCorePage ? 'لا يمكن حذف صفحة رئيسية' : 'حذف المحتوى'}
+                      className="p-2 bg-red-500/5 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all border border-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="حذف المحتوى"
+                    >
                       <TrashIcon className="w-4 h-4" />
                     </button>
                   </div>
@@ -270,7 +361,7 @@ const PageContentManagementPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
@@ -370,7 +461,7 @@ const PageContentManagementPage: React.FC = () => {
         message="هل أنت متأكد من حذف هذا المحتوى؟ لا يمكن التراجع بعد الحذف."
         confirmLabel="حذف المحتوى"
         onConfirm={handleDelete}
-        onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: null, slug: null })}
       />
     </div>
   );

@@ -4,24 +4,61 @@ import Categories from '../components/Categories';
 import FeaturedReptiles from '../components/FeaturedReptiles';
 import SocialSection from '../components/SocialSection';
 import ReptileCard from '../components/ReptileCard';
+import PageNotAvailable from '../components/PageNotAvailable';
 import { useDatabase } from '../contexts/DatabaseContext';
-import { Page } from '../App';
+import { usePageContent } from '../hooks/usePageContent';
+import { PageContent } from '../types';
 
 interface HomePageProps {
   setPage: (page: string) => void;
 }
 
+const homeFallback: PageContent = {
+  id: 'fallback-home',
+  slug: 'home',
+  title: 'الصفحة الرئيسية',
+  excerpt: 'محتوى الصفحة الرئيسية كما تم ضبطه من لوحة الإدارة.',
+  content: '',
+  seoTitle: 'بيت الزواحف - الصفحة الرئيسية',
+  seoDescription: 'أفضل متجر للزواحف والمستلزمات.',
+  isActive: true,
+  updatedAt: new Date().toISOString().slice(0, 10),
+};
+
 const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
   const { products, articles } = useDatabase();
+  const { pageContent: homeContent, loading, isActive } = usePageContent('home', homeFallback);
   const safeProducts = Array.isArray(products) ? products : [];
   const safeArticles = Array.isArray(articles) ? articles : [];
   const featured = safeProducts.find(p => p.rating >= 4.9) || safeProducts[0];
   const bestsellers = [...safeProducts].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
   const newArrivals = [...safeProducts].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 10);
   const careSheets = [...safeArticles].slice(0, 6);
+  const hasCustomHomeContent = Boolean(homeContent.content && homeContent.content.trim());
+
+  if (loading) {
+    return <div className="animate-fade-in text-center py-20">جاري التحميل...</div>;
+  }
+
+  if (!isActive) {
+    return <PageNotAvailable title={homeContent.title || 'الصفحة الرئيسية غير متاحة حالياً'} />;
+  }
 
   return (
     <>
+      <section className="mb-10 text-center max-w-4xl mx-auto">
+        <h1 className="text-4xl sm:text-5xl font-black mb-4">{homeContent.title}</h1>
+        {homeContent.excerpt && (
+          <p className="text-gray-300 text-lg leading-relaxed">{homeContent.excerpt}</p>
+        )}
+        {hasCustomHomeContent && (
+          <div
+            className="mt-6 text-right bg-white/5 border border-white/10 rounded-2xl p-6 text-gray-300 leading-loose"
+            dangerouslySetInnerHTML={{ __html: homeContent.content }}
+          />
+        )}
+      </section>
+
       <Hero setPage={setPage as any} />
       <Categories />
 

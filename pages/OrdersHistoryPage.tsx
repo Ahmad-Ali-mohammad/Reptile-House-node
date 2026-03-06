@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { mockOrders } from '../constants';
+import { useDatabase } from '../contexts/DatabaseContext';
 import OrderCard from '../components/OrderCard';
 import { Page } from '../App';
 
@@ -11,21 +10,30 @@ interface OrdersHistoryPageProps {
 
 const OrdersHistoryPage: React.FC<OrdersHistoryPageProps> = ({ setPage }) => {
     const { user } = useAuth();
+    const { orders, loading } = useDatabase();
 
     if (!user) {
         return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold">يرجى تسجيل الدخول لعرض سجل طلباتك.</h2>
-          </div>
+            <div className="text-center py-20">
+                <h2 className="text-2xl font-bold">يرجى تسجيل الدخول لعرض سجل طلباتك.</h2>
+            </div>
         );
     }
-    
+
+    if (loading) {
+        return (
+            <div className="text-center py-20">
+                <h2 className="text-2xl font-bold">جار تحميل الطلبات...</h2>
+            </div>
+        );
+    }
+
     return (
         <div>
             <h1 className="text-4xl font-bold text-center mb-8">سجل الطلبات</h1>
-            {mockOrders.length > 0 ? (
+            {orders.length > 0 ? (
                 <div className="space-y-6 max-w-4xl mx-auto">
-                    {mockOrders.map((order) => (
+                    {orders.map((order) => (
                         <OrderCard key={order.id} order={order} setPage={setPage} />
                     ))}
                 </div>

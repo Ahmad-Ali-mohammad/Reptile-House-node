@@ -1,13 +1,37 @@
 /**
  * API client for backend (MySQL mode only).
  */
-import type { Reptile, Order, Address, User, Article, HeroSlide, Supply, ShamCashConfig, CompanyInfo, ContactInfo, TeamMember, FilterGroup, PageContent, SeoSettings, MediaItem, MediaFolder, UserPreferences, ServiceItem } from '../types';
+import type { Reptile, Order, Address, User, Article, HeroSlide, Supply, ShamCashConfig, CompanyInfo, ContactInfo, TeamMember, FilterGroup, PageContent, SeoSettings, MediaItem, MediaFolder, UserPreferences, ServiceItem, DatabaseStatus, MediaUploadResult } from '../types';
 
 const configuredBase =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL
     ? String(import.meta.env.VITE_API_URL).trim()
     : '') || '';
-const BASE = configuredBase ? configuredBase.replace(/\/+$/, '') : '';
+const normalizeBase = (rawBase: string): string => {
+  const trimmed = rawBase.trim();
+  if (!trimmed) return '';
+
+  const normalized = trimmed.replace(/\/+$/, '');
+  if (typeof window === 'undefined') return normalized;
+
+  // Guard against accidentally shipping localhost API URLs to non-local clients.
+  try {
+    const parsed = new URL(normalized, window.location.origin);
+    const currentHost = window.location.hostname;
+    const targetHost = parsed.hostname;
+    const currentIsLocal = currentHost === 'localhost' || currentHost === '127.0.0.1';
+    const targetIsLocal = targetHost === 'localhost' || targetHost === '127.0.0.1';
+
+    if (!currentIsLocal && targetIsLocal) {
+      return '';
+    }
+  } catch {
+    // Keep raw normalized value for relative paths and unusual but valid inputs.
+  }
+
+  return normalized;
+};
+const BASE = normalizeBase(configuredBase);
 const AUTH_TOKEN_STORAGE_KEY = 'semo_auth_token';
 
 type AuthResponse = { user: User; token: string };
@@ -27,9 +51,11 @@ export class ApiError extends Error {
 function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${BASE}${path}`;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
+  if (options.body !== undefined && !(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
   try {
     const token = globalThis.localStorage?.getItem(AUTH_TOKEN_STORAGE_KEY);
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -53,6 +79,10 @@ function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   isEnabled: () => true,
+  getDatabaseStatus: (options?: { includeDetails?: boolean }): Promise<DatabaseStatus> => {
+    const includeDetails = options?.includeDetails ? 'true' : 'false';
+    return request<DatabaseStatus>(`/api/system/db-status?includeDetails=${includeDetails}`);
+  },
 
   getProducts: (): Promise<Reptile[]> => request<Reptile[]>('/api/products'),
   saveProduct: (product: Reptile): Promise<Reptile> =>
@@ -60,6 +90,7 @@ export const api = {
   deleteProduct: (id: number): Promise<void> => request(`/api/products/${id}`, { method: 'DELETE' }),
 
   getOrders: (): Promise<Order[]> => request<Order[]>('/api/orders'),
+  getMyOrders: (): Promise<Order[]> => request<Order[]>('/api/orders/my'),
   saveOrder: (order: Order): Promise<Order> => request<Order>('/api/orders', { method: 'POST', body: JSON.stringify(order) }),
   updateOrderStatus: (id: string, status: Order['status']): Promise<Order> =>
     request<Order>(`/api/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
@@ -159,6 +190,12 @@ export const api = {
   },
   searchMedia: (searchTerm: string): Promise<MediaItem[]> =>
     request<MediaItem[]>(`/api/media?search=${encodeURIComponent(searchTerm)}`),
+  uploadMediaFile: (file: File, category?: string): Promise<MediaUploadResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (category) formData.append('category', category);
+    return request<MediaUploadResult>('/api/media/upload-file', { method: 'POST', body: formData });
+  },
   uploadMedia: (media: MediaItem): Promise<MediaItem> =>
     request<MediaItem>('/api/media', { method: 'POST', body: JSON.stringify(media) }),
   updateMedia: (id: string, updates: Partial<MediaItem>): Promise<MediaItem> =>

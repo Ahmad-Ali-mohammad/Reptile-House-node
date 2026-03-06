@@ -15,7 +15,7 @@ const PolicyPage: React.FC<PolicyPageProps> = ({ title, children, contentHtml })
                 {contentHtml ? (
                     <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
                 ) : (
-                    children
+                    children || <p className="text-gray-500">لا يوجد محتوى منشور بعد.</p>
                 )}
             </div>
         </div>

@@ -18,7 +18,7 @@ interface DatabaseContextType {
   deleteProduct: (id: number) => void;
   addAddress: (address: Address) => void;
   removeAddress: (id: number) => void;
-  createOrder: (order: Order) => void;
+  createOrder: (order: Order) => Promise<Order | null>;
   updateOrder: (id: string, status: Order['status']) => void;
   deleteOrder: (id: string) => void;
   updateOrderPaymentStatus: (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string) => void;
@@ -58,7 +58,9 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     ];
     const protectedRequests = isManager
       ? [api.getOrders(), api.getAddresses(), api.getUsers()]
-      : [Promise.resolve([] as Order[]), Promise.resolve([] as Address[]), Promise.resolve([] as User[])];
+      : user
+        ? [api.getMyOrders(), api.getAddresses(), Promise.resolve([] as User[])]
+        : [Promise.resolve([] as Order[]), Promise.resolve([] as Address[]), Promise.resolve([] as User[])];
 
     Promise.all([...baseRequests, ...protectedRequests])
       .then(([p, ar, h, s, o, a, u]) => {
@@ -76,7 +78,7 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
         setBackendAvailable(false);
       })
       .finally(() => setLoading(false));
-  }, [isManager]);
+  }, [isManager, user?.id]);
 
   useEffect(() => {
     refreshData();
@@ -114,8 +116,15 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     api.deleteHeroSlide(id).then(() => refreshData()).catch(console.error);
   };
 
-  const createOrder = (order: Order) => {
-    api.saveOrder(order).then(() => refreshData()).catch(console.error);
+  const createOrder = async (order: Order): Promise<Order | null> => {
+    try {
+      const saved = await api.saveOrder(order);
+      refreshData();
+      return saved;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   };
 
   const updateOrder = (id: string, status: Order['status']) => {

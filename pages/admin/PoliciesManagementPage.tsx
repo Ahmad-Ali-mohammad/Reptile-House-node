@@ -16,7 +16,7 @@ const defaultPolicies: PolicyDocument[] = [
         content: 'نحن في Reptile House نحترم خصوصيتك ونلتزم بحماية معلوماتك الشخصية...',
         lastUpdated: new Date().toISOString().split('T')[0],
         isActive: true,
-        icon: 'ðŸ”’'
+        icon: '🔒'
     },
     {
         id: 'returns',
@@ -25,7 +25,7 @@ const defaultPolicies: PolicyDocument[] = [
         content: 'يمكنك إرجاع أو استبدال المنتجات خلال 7 أيام من تاريخ الشراء...',
         lastUpdated: new Date().toISOString().split('T')[0],
         isActive: true,
-        icon: 'ðŸ”„'
+        icon: '🔄'
     },
     {
         id: 'warranty',
@@ -34,7 +34,7 @@ const defaultPolicies: PolicyDocument[] = [
         content: 'نضمن صحة جميع الزواحف لمدة 30 يوماً من تاريخ الشراء...',
         lastUpdated: new Date().toISOString().split('T')[0],
         isActive: true,
-        icon: 'âœ…'
+        icon: '✅'
     },
     {
         id: 'terms',
@@ -43,7 +43,7 @@ const defaultPolicies: PolicyDocument[] = [
         content: 'باستخدامك لهذا الموقع، فإنك توافق على الشروط والأحكام التالية...',
         lastUpdated: new Date().toISOString().split('T')[0],
         isActive: true,
-        icon: 'ðŸ“‹'
+        icon: '📋'
     },
     {
         id: 'shipping',
@@ -52,7 +52,7 @@ const defaultPolicies: PolicyDocument[] = [
         content: 'نوفر خدمة التوصيل لجميع المحافظات السورية خلال 2-5 أيام عمل...',
         lastUpdated: new Date().toISOString().split('T')[0],
         isActive: true,
-        icon: 'ðŸšš'
+        icon: '🚚'
     }
 ];
 
@@ -75,13 +75,21 @@ const PoliciesManagementPage: React.FC = () => {
     });
     const [isHelpOpen, setIsHelpOpen] = useState(false);
 
-    const savePolicies = async (newPolicies: PolicyDocument[]) => {
-        setPolicies(newPolicies);
-        await Promise.all(newPolicies.map((policy) => api.savePolicy(policy)));
+    const loadPolicies = async () => {
+        try {
+            let rows = await api.getPolicies();
+            if (!rows.length) {
+                await Promise.all(defaultPolicies.map((policy) => api.savePolicy(policy)));
+                rows = await api.getPolicies();
+            }
+            setPolicies(rows);
+        } catch {
+            setPolicies(defaultPolicies);
+        }
     };
 
     useEffect(() => {
-        api.getPolicies().then((rows) => setPolicies(rows.length ? rows : defaultPolicies)).catch(() => setPolicies(defaultPolicies));
+        loadPolicies();
     }, []);
 
     const handleOpenModal = (policy?: PolicyDocument) => {
@@ -95,7 +103,7 @@ const PoliciesManagementPage: React.FC = () => {
                 content: '',
                 lastUpdated: new Date().toISOString().split('T')[0],
                 isActive: true,
-                icon: 'ðŸ“„'
+                icon: '📄'
             });
         }
         setIsModalOpen(true);
@@ -116,20 +124,17 @@ const PoliciesManagementPage: React.FC = () => {
                 content: editingPolicy.content,
                 lastUpdated: new Date().toISOString().split('T')[0],
                 isActive: editingPolicy.isActive !== undefined ? editingPolicy.isActive : true,
-                icon: editingPolicy.icon || 'ðŸ“„'
+                icon: editingPolicy.icon || '📄'
             };
 
-            const existingIndex = policies.findIndex(p => p.id === policyToSave.id);
-            let newPolicies: PolicyDocument[];
-            if (existingIndex > -1) {
-                newPolicies = [...policies];
-                newPolicies[existingIndex] = policyToSave;
-            } else {
-                newPolicies = [...policies, policyToSave];
+            try {
+                await api.savePolicy(policyToSave);
+                await loadPolicies();
+                setIsModalOpen(false);
+                setEditingPolicy(null);
+            } catch {
+                alert('تعذر حفظ السياسة. يرجى المحاولة مرة أخرى.');
             }
-            await await savePolicies(newPolicies);
-            setIsModalOpen(false);
-            setEditingPolicy(null);
         }
     };
 
@@ -139,17 +144,25 @@ const PoliciesManagementPage: React.FC = () => {
 
     const handleConfirmDelete = async () => {
         if (confirmDelete.id) {
-            const newPolicies = policies.filter(p => p.id !== confirmDelete.id);
-            await await savePolicies(newPolicies);
+            try {
+                await api.deletePolicy(confirmDelete.id);
+                await loadPolicies();
+            } catch {
+                alert('تعذر حذف السياسة. يرجى المحاولة مرة أخرى.');
+            }
         }
         setConfirmDelete({ isOpen: false, id: null });
     };
 
     const togglePolicyStatus = async (id: string) => {
-        const newPolicies = policies.map(p =>
-            p.id === id ? { ...p, isActive: !p.isActive } : p
-        );
-        await await savePolicies(newPolicies);
+        const current = policies.find((p) => p.id === id);
+        if (!current) return;
+        try {
+            await api.savePolicy({ ...current, isActive: !current.isActive });
+            await loadPolicies();
+        } catch {
+            alert('تعذر تحديث حالة السياسة.');
+        }
     };
 
     const activePolicies = policies.filter(p => p.isActive);
@@ -345,9 +358,9 @@ const PoliciesManagementPage: React.FC = () => {
                                     id="policy-icon"
                                     type="text"
                                     className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold text-2xl"
-                                    value={editingPolicy?.icon || 'ðŸ“„'}
+                                    value={editingPolicy?.icon || '📄'}
                                     onChange={e => setEditingPolicy({ ...editingPolicy, icon: e.target.value })}
-                                    placeholder="ðŸ“„"
+                                    placeholder="📄"
                                 />
                             </div>
 

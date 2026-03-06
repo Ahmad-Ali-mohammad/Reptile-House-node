@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useMemo, useRef } from 'react';
 import { useDatabase } from '../../contexts/DatabaseContext';
 import { EditIcon, TrashIcon, PlusIcon, SearchIcon } from '../../components/icons';
@@ -8,15 +8,16 @@ import HelpButton from '../../components/HelpButton';
 import HelpModal from '../../components/HelpModal';
 import { Reptile } from '../../types';
 import { helpContent } from '../../constants/helpContent';
+import { IMAGE_FILE_ACCEPT, mediaService } from '../../services/media';
 
 const supplyCategories = [
-    { value: 'food', label: 'الأطعمة والتغذية' },
-    { value: 'housing', label: 'البيوت والحاويات' },
-    { value: 'heating', label: 'التدفئة والإضاءة' },
-    { value: 'decoration', label: 'الديكورات والزينة' },
-    { value: 'cleaning', label: 'التنظيف والصيانة' },
-    { value: 'health', label: 'الصحة والعناية' },
-    { value: 'accessories', label: 'الإكسسوارات' }
+    { value: 'food', label: 'Ø§Ù„Ø£Ø·Ø¹Ù…Ø© ÙˆØ§Ù„ØªØºØ°ÙŠØ©' },
+    { value: 'housing', label: 'Ø§Ù„Ø¨ÙŠÙˆØª ÙˆØ§Ù„Ø­Ø§ÙˆÙŠØ§Øª' },
+    { value: 'heating', label: 'Ø§Ù„ØªØ¯ÙØ¦Ø© ÙˆØ§Ù„Ø¥Ø¶Ø§Ø¡Ø©' },
+    { value: 'decoration', label: 'Ø§Ù„Ø¯ÙŠÙƒÙˆØ±Ø§Øª ÙˆØ§Ù„Ø²ÙŠÙ†Ø©' },
+    { value: 'cleaning', label: 'Ø§Ù„ØªÙ†Ø¸ÙŠÙ ÙˆØ§Ù„ØµÙŠØ§Ù†Ø©' },
+    { value: 'health', label: 'Ø§Ù„ØµØ­Ø© ÙˆØ§Ù„Ø¹Ù†Ø§ÙŠØ©' },
+    { value: 'accessories', label: 'Ø§Ù„Ø¥ÙƒØ³Ø³ÙˆØ§Ø±Ø§Øª' }
 ];
 
 const SuppliesManagementPage: React.FC = () => {
@@ -25,6 +26,7 @@ const SuppliesManagementPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isImageUploading, setIsImageUploading] = useState(false);
     const [editingSupply, setEditingSupply] = useState<Partial<Reptile> | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,9 +40,9 @@ const SuppliesManagementPage: React.FC = () => {
     const [customCategory, setCustomCategory] = useState('');
 
     const supplyTabs: TabItem[] = [
-      { id: 'all_supplies', label: 'جميع المستلزمات', icon: '📦' },
-      { id: 'featured', label: 'المميزة', icon: '✨' },
-      { id: 'out_of_stock', label: 'نفذت من المخزون', icon: '❌', badge: supplies.filter(s => !s.isAvailable).length }
+      { id: 'all_supplies', label: 'Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù…Ø§Øª', icon: 'ðŸ“¦' },
+      { id: 'featured', label: 'Ø§Ù„Ù…Ù…ÙŠØ²Ø©', icon: 'âœ¨' },
+      { id: 'out_of_stock', label: 'Ù†ÙØ°Øª Ù…Ù† Ø§Ù„Ù…Ø®Ø²ÙˆÙ†', icon: 'âŒ', badge: supplies.filter(s => !s.isAvailable).length }
     ];
 
     const filteredSupplies = useMemo(() => {
@@ -66,11 +68,11 @@ const SuppliesManagementPage: React.FC = () => {
             setEditingSupply({
                 id: 0,
                 name: '',
-                species: 'مستلزمات',
+                species: 'Ù…Ø³ØªÙ„Ø²Ù…Ø§Øª',
                 price: 0,
                 imageUrl: '',
                 category: 'food',
-                status: 'متوفر',
+                status: 'Ù…ØªÙˆÙØ±',
                 isAvailable: true,
                 rating: 5.0,
                 description: ''
@@ -79,31 +81,41 @@ const SuppliesManagementPage: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setEditingSupply(prev => ({ ...prev, imageUrl: reader.result as string }));
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        try {
+            mediaService.validateImageFile(file);
+            setIsImageUploading(true);
+            const imageUrl = await mediaService.uploadProjectImage(file, 'supplies');
+            setEditingSupply(prev => ({ ...prev, imageUrl }));
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù…');
+        } finally {
+            setIsImageUploading(false);
+            e.target.value = '';
         }
     };
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
         if (editingSupply) {
+            if (isImageUploading) {
+                alert('Ø§Ù†ØªØ¸Ø± Ø­ØªÙ‰ ÙŠÙƒØªÙ…Ù„ Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±Ø© Ø£ÙˆÙ„Ø§Ù‹');
+                return;
+            }
             const finalCategory = isNewCategory ? customCategory : (editingSupply.category || 'food');
 
             if (!finalCategory || !editingSupply.imageUrl) {
-                alert('يرجى ملء جميع الحقول ورفع صورة');
+                alert('ÙŠØ±Ø¬Ù‰ Ù…Ù„Ø¡ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ„ ÙˆØ±ÙØ¹ ØµÙˆØ±Ø©');
                 return;
             }
 
             const supplyToSave: Reptile = {
                 ...editingSupply as Reptile,
                 category: finalCategory as any,
-                species: 'مستلزمات',
+                species: 'Ù…Ø³ØªÙ„Ø²Ù…Ø§Øª',
                 price: Number(editingSupply.price) || 0,
                 id: Number(editingSupply.id) || 0
             };
@@ -129,8 +141,8 @@ const SuppliesManagementPage: React.FC = () => {
         <div className="animate-fade-in relative space-y-8 text-right">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
                 <div>
-                    <h1 className="text-4xl font-black mb-2">إدارة المستلزمات</h1>
-                    <p className="text-gray-400">إدارة مستلزمات رعاية الزواحف</p>
+                    <h1 className="text-4xl font-black mb-2">Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù…Ø§Øª</h1>
+                    <p className="text-gray-400">Ø¥Ø¯Ø§Ø±Ø© Ù…Ø³ØªÙ„Ø²Ù…Ø§Øª Ø±Ø¹Ø§ÙŠØ© Ø§Ù„Ø²ÙˆØ§Ø­Ù</p>
                 </div>
                 <HelpButton onClick={() => setIsHelpOpen(true)} />
             </div>
@@ -139,7 +151,7 @@ const SuppliesManagementPage: React.FC = () => {
                 <div className="relative flex-1 w-full max-w-md">
                     <input
                         type="text"
-                        placeholder="ابحث في المستلزمات..."
+                        placeholder="Ø§Ø¨Ø­Ø« ÙÙŠ Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù…Ø§Øª..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-3.5 px-6 ps-14 outline-none focus:ring-2 focus:ring-amber-500/50 text-white transition-all shadow-inner"
@@ -151,7 +163,7 @@ const SuppliesManagementPage: React.FC = () => {
                     className="flex items-center gap-3 bg-amber-500 text-gray-900 font-black py-3.5 px-8 rounded-2xl hover:bg-amber-400 transition-all shadow-xl shadow-amber-500/20 active:scale-95"
                 >
                     <PlusIcon className="w-5 h-5" />
-                    <span>إضافة مستلزم جديد</span>
+                    <span>Ø¥Ø¶Ø§ÙØ© Ù…Ø³ØªÙ„Ø²Ù… Ø¬Ø¯ÙŠØ¯</span>
                 </button>
             </div>
 
@@ -162,11 +174,11 @@ const SuppliesManagementPage: React.FC = () => {
                     <table className="w-full text-right">
                         <thead>
                             <tr className="border-b border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-widest bg-black/20">
-                                <th className="p-6">المنتج</th>
-                                <th className="p-6 text-center">الفئة</th>
-                                <th className="p-6">السعر</th>
-                                <th className="p-6 text-center">الحالة</th>
-                                <th className="p-6 text-left">إجراءات</th>
+                                <th className="p-6">Ø§Ù„Ù…Ù†ØªØ¬</th>
+                                <th className="p-6 text-center">Ø§Ù„ÙØ¦Ø©</th>
+                                <th className="p-6">Ø§Ù„Ø³Ø¹Ø±</th>
+                                <th className="p-6 text-center">Ø§Ù„Ø­Ø§Ù„Ø©</th>
+                                <th className="p-6 text-left">Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -187,7 +199,7 @@ const SuppliesManagementPage: React.FC = () => {
                                             {supplyCategories.find(c => c.value === supply.category)?.label || supply.category}
                                         </span>
                                     </td>
-                                    <td className="p-6 font-poppins font-black text-amber-500 text-xl">{supply.price.toLocaleString('ar-SY')} ل.س</td>
+                                    <td className="p-6 font-poppins font-black text-amber-500 text-xl">{supply.price.toLocaleString('ar-SY')} Ù„.Ø³</td>
                                     <td className="p-6 text-center">
                                         <span className={`px-4 py-1.5 text-[10px] font-black rounded-full uppercase border ${
                                             supply.isAvailable 
@@ -202,14 +214,14 @@ const SuppliesManagementPage: React.FC = () => {
                                             <button 
                                                 onClick={() => handleOpenModal(supply)} 
                                                 className="p-3 bg-white/5 text-gray-400 hover:text-amber-400 hover:bg-amber-400/10 rounded-xl transition-all border border-white/5"
-                                                title="تعديل"
+                                                title="ØªØ¹Ø¯ÙŠÙ„"
                                             >
                                                 <EditIcon className="w-5 h-5"/>
                                             </button>
                                             <button 
                                                 onClick={() => handleDeleteClick(supply.id)} 
                                                 className="p-3 bg-red-500/5 text-red-400 hover:text-white hover:bg-red-500 rounded-xl transition-all border border-red-500/10"
-                                                title="حذف"
+                                                title="Ø­Ø°Ù"
                                             >
                                                 <TrashIcon className="w-5 h-5"/>
                                             </button>
@@ -225,8 +237,8 @@ const SuppliesManagementPage: React.FC = () => {
             {/* Custom Confirmation Modal */}
             <ConfirmationModal 
                 isOpen={confirmDelete.isOpen}
-                title="تأكيد الحذف النهائي"
-                message="هل أنت متأكد تماماً من رغبتك في حذف هذا المستلزم من المتجر؟ هذه العملية نهائية ولا يمكن التراجع عنها."
+                title="ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ"
+                message="Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ ØªÙ…Ø§Ù…Ø§Ù‹ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù… Ù…Ù† Ø§Ù„Ù…ØªØ¬Ø±ØŸ Ù‡Ø°Ù‡ Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ù†Ù‡Ø§Ø¦ÙŠØ© ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù†Ù‡Ø§."
                 onConfirm={handleConfirmDelete}
                 onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
             />
@@ -238,19 +250,19 @@ const SuppliesManagementPage: React.FC = () => {
                         type="button"
                         className="absolute inset-0 bg-black/90 backdrop-blur-md cursor-default"
                         onClick={() => setIsModalOpen(false)}
-                        aria-label="إغلاق النافذة"
+                        aria-label="Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ù†Ø§ÙØ°Ø©"
                     />
                     <form 
                         onSubmit={handleSave}
                         className="relative w-full max-w-4xl glass-dark border border-white/10 rounded-[3rem] p-8 md:p-14 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto custom-scrollbar bg-[#0f1117]"
                     >
                         <h2 className="text-4xl font-black mb-10 text-white tracking-tighter">
-                            {editingSupply?.id ? 'تحديث بيانات المستلزم' : 'إضافة مستلزم جديد'}
+                            {editingSupply?.id ? 'ØªØ­Ø¯ÙŠØ« Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù…' : 'Ø¥Ø¶Ø§ÙØ© Ù…Ø³ØªÙ„Ø²Ù… Ø¬Ø¯ÙŠØ¯'}
                         </h2>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-right">
                             <div className="md:col-span-1 space-y-6">
-                                <label htmlFor="supply-image-upload" className="block text-xs font-black text-amber-500 uppercase tracking-widest">الصورة التعريفية</label>
+                                <label htmlFor="supply-image-upload" className="block text-xs font-black text-amber-500 uppercase tracking-widest">Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙÙŠØ©</label>
                                 <div 
                                     onClick={() => fileInputRef.current?.click()}
                                     onKeyDown={(e) => {
@@ -261,68 +273,73 @@ const SuppliesManagementPage: React.FC = () => {
                                     }}
                                     role="button"
                                     tabIndex={0}
-                                    aria-label="رفع صورة المنتج"
+                                    aria-label="Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ù…Ù†ØªØ¬"
                                     className="relative aspect-square w-full rounded-[2.5rem] border-2 border-dashed border-white/10 bg-white/5 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-all overflow-hidden group"
                                 >
                                     {editingSupply?.imageUrl ? (
-                                        <img src={editingSupply.imageUrl} alt={editingSupply.name || 'صورة المنتج'} className="w-full h-full object-cover" />
+                                        <img src={editingSupply.imageUrl} alt={editingSupply.name || 'ØµÙˆØ±Ø© Ø§Ù„Ù…Ù†ØªØ¬'} className="w-full h-full object-cover" />
                                     ) : (
                                         <PlusIcon className="w-12 h-12 text-gray-600" />
                                     )}
+                                    {isImageUploading ? (
+                                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-sm font-black text-amber-400">
+                                            Ø¬Ø§Ø±ÙŠ Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±Ø©...
+                                        </div>
+                                    ) : null}
                                 </div>
-                                <input id="supply-image-upload" type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} aria-label="اختيار صورة المنتج" />
+                                <input id="supply-image-upload" type="file" ref={fileInputRef} className="hidden" accept={IMAGE_FILE_ACCEPT} onChange={handleImageChange} aria-label="Ø§Ø®ØªÙŠØ§Ø± ØµÙˆØ±Ø© Ø§Ù„Ù…Ù†ØªØ¬" />
                             </div>
 
                             <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="col-span-2">
-                                    <label htmlFor="supply-name" className="text-xs font-black text-amber-500 uppercase mb-2 block">اسم المستلزم</label>
+                                    <label htmlFor="supply-name" className="text-xs font-black text-amber-500 uppercase mb-2 block">Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù…</label>
                                     <input id="supply-name" required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold" value={editingSupply?.name || ''} onChange={e => setEditingSupply({...editingSupply, name: e.target.value})} />
                                 </div>
                                 <div>
-                                    <label htmlFor="supply-category" className="text-xs font-black text-amber-500 uppercase mb-2 block">الفئة</label>
+                                    <label htmlFor="supply-category" className="text-xs font-black text-amber-500 uppercase mb-2 block">Ø§Ù„ÙØ¦Ø©</label>
                                     <select id="supply-category" className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white" value={editingSupply?.category} onChange={e => setEditingSupply({...editingSupply, category: e.target.value as Reptile['category']})}>
                                         {supplyCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label htmlFor="supply-price" className="text-xs font-black text-amber-500 uppercase mb-2 block">السعر (ل.س)</label>
+                                    <label htmlFor="supply-price" className="text-xs font-black text-amber-500 uppercase mb-2 block">Ø§Ù„Ø³Ø¹Ø± (Ù„.Ø³)</label>
                                     <input id="supply-price" type="number" className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold font-poppins" value={editingSupply?.price || 0} onChange={e => setEditingSupply({...editingSupply, price: Number(e.target.value)})} />
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="text-xs font-black text-amber-500 uppercase mb-2 block">الحالة</label>
+                                    <label className="text-xs font-black text-amber-500 uppercase mb-2 block">Ø§Ù„Ø­Ø§Ù„Ø©</label>
                                     <div className="flex gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input 
                                                 type="radio" 
                                                 name="availability" 
                                                 checked={editingSupply?.isAvailable === true}
-                                                onChange={() => setEditingSupply({...editingSupply, isAvailable: true, status: 'متوفر'})}
+                                                onChange={() => setEditingSupply({...editingSupply, isAvailable: true, status: 'Ù…ØªÙˆÙØ±'})}
                                                 className="w-4 h-4"
                                             />
-                                            <span className="text-white">متوفر</span>
+                                            <span className="text-white">Ù…ØªÙˆÙØ±</span>
                                         </label>
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input 
                                                 type="radio" 
                                                 name="availability" 
                                                 checked={editingSupply?.isAvailable === false}
-                                                onChange={() => setEditingSupply({...editingSupply, isAvailable: false, status: 'غير متوفر'})}
+                                                onChange={() => setEditingSupply({...editingSupply, isAvailable: false, status: 'ØºÙŠØ± Ù…ØªÙˆÙØ±'})}
                                                 className="w-4 h-4"
                                             />
-                                            <span className="text-white">غير متوفر</span>
+                                            <span className="text-white">ØºÙŠØ± Ù…ØªÙˆÙØ±</span>
                                         </label>
                                     </div>
                                 </div>
                                 <div className="col-span-2">
-                                    <label htmlFor="supply-description" className="text-xs font-black text-amber-500 uppercase mb-2 block">الوصف</label>
+                                    <label htmlFor="supply-description" className="text-xs font-black text-amber-500 uppercase mb-2 block">Ø§Ù„ÙˆØµÙ</label>
                                     <textarea id="supply-description" rows={4} className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white resize-none" value={editingSupply?.description || ''} onChange={e => setEditingSupply({...editingSupply, description: e.target.value})} />
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex gap-6 mt-12">
-                            <button type="submit" className="flex-1 bg-amber-500 text-gray-900 font-black py-5 rounded-[1.5rem] hover:bg-amber-400 shadow-2xl text-lg">حفظ التغييرات</button>
-                            <button type="button" onClick={() => setIsModalOpen(false)} className="px-10 bg-white/5 text-gray-400 font-black rounded-[1.5rem] border border-white/5">إلغاء</button>
+                            <button type="submit" disabled={isImageUploading} className="flex-1 bg-amber-500 text-gray-900 font-black py-5 rounded-[1.5rem] hover:bg-amber-400 shadow-2xl text-lg disabled:opacity-60 disabled:cursor-not-allowed">Ø­ÙØ¸ Ø§Ù„ØªØºÙŠÙŠØ±Ø§Øª</button>
+                            <button type="button" onClick={() => setIsModalOpen(false)} className="px-10 bg-white/5 text-gray-400 font-black rounded-[1.5rem] border border-white/5">Ø¥Ù„ØºØ§Ø¡</button>
                         </div>
                     </form>
                 </div>
@@ -340,3 +357,4 @@ const SuppliesManagementPage: React.FC = () => {
 };
 
 export default SuppliesManagementPage;
+

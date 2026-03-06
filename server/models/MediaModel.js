@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import { rowToCamel, rowsToCamel, objToSnake } from '../utils/rowMapper.js';
+import { deleteManagedUpload } from '../utils/mediaStorage.js';
 
 export async function findAll(folderId = null, category = null) {
   let query = 'SELECT * FROM media_items';
@@ -77,14 +78,28 @@ export async function update(id, data) {
 }
 
 export async function remove(id) {
+  const existing = await findById(id);
   const [r] = await pool.query('DELETE FROM media_items WHERE id = ?', [id]);
+  if (r.affectedRows > 0 && existing?.url) {
+    await deleteManagedUpload(existing.url).catch((error) => {
+      console.error('Failed to remove media file:', error);
+    });
+  }
   return r.affectedRows > 0;
 }
 
 export async function bulkDelete(ids) {
+  const [rows] = await pool.query('SELECT url FROM media_items WHERE id IN (?)', [ids]);
   const [r] = await pool.query(
     'DELETE FROM media_items WHERE id IN (?)',
     [ids]
+  );
+  await Promise.allSettled(
+    (rows || []).map((row) =>
+      deleteManagedUpload(row.url).catch((error) => {
+        console.error('Failed to remove media file:', error);
+      })
+    )
   );
   return r.affectedRows;
 }

@@ -17,8 +17,13 @@ const FiltersManagementPage: React.FC = () => {
         id: null
     });
 
-    const refreshGroups = () => {
-        api.getFilterGroups().then(setFilterGroups).catch(() => setFilterGroups([]));
+    const refreshGroups = async () => {
+        try {
+            const rows = await api.getFilterGroups();
+            setFilterGroups(Array.isArray(rows) ? rows : []);
+        } catch {
+            setFilterGroups([]);
+        }
     };
 
     useEffect(() => {
@@ -69,7 +74,7 @@ const FiltersManagementPage: React.FC = () => {
         setEditingGroup({ ...editingGroup, options: newOptions });
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (editingGroup) {
             if (!editingGroup.name || !editingGroup.options || editingGroup.options.length === 0) {
@@ -86,10 +91,14 @@ const FiltersManagementPage: React.FC = () => {
                 appliesTo: editingGroup.appliesTo || 'both'
             };
 
-            api.saveFilterGroup(groupToSave);
-            refreshGroups();
-            setIsModalOpen(false);
-            setEditingGroup(null);
+            try {
+                await api.saveFilterGroup(groupToSave);
+                await refreshGroups();
+                setIsModalOpen(false);
+                setEditingGroup(null);
+            } catch {
+                globalThis.alert('تعذر حفظ مجموعة الفلاتر. يرجى المحاولة مرة أخرى.');
+            }
         }
     };
 
@@ -97,19 +106,27 @@ const FiltersManagementPage: React.FC = () => {
         setConfirmDelete({ isOpen: true, id });
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (confirmDelete.id) {
-            api.deleteFilterGroup(confirmDelete.id);
-            refreshGroups();
+            try {
+                await api.deleteFilterGroup(confirmDelete.id);
+                await refreshGroups();
+            } catch {
+                globalThis.alert('تعذر حذف مجموعة الفلاتر. يرجى المحاولة مرة أخرى.');
+            }
         }
         setConfirmDelete({ isOpen: false, id: null });
     };
 
-    const toggleGroupStatus = (id: string) => {
+    const toggleGroupStatus = async (id: string) => {
         const group = filterGroups.find(g => g.id === id);
         if (group) {
-            api.saveFilterGroup({ ...group, isActive: !group.isActive });
-            refreshGroups();
+            try {
+                await api.saveFilterGroup({ ...group, isActive: !group.isActive });
+                await refreshGroups();
+            } catch {
+                globalThis.alert('تعذر تحديث حالة المجموعة.');
+            }
         }
     };
 

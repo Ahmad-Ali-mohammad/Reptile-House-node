@@ -1,5 +1,5 @@
 ﻿
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppMode } from '../../App';
 import Sidebar from './Sidebar';
 import AdminDashboardPage from './AdminDashboardPage';
@@ -27,10 +27,13 @@ import CompanyInfoManagementPage from './CompanyInfoManagementPage';
 import ContactInfoManagementPage from './ContactInfoManagementPage';
 import PageContentManagementPage from './PageContentManagementPage';
 import SeoManagementPage from './SeoManagementPage';
+import DatabaseStatusPage from './DatabaseStatusPage';
 import { MenuIcon } from '../../components/icons';
 import { Page } from '../../App';
+import { ApiError, api } from '../../services/api';
+import type { DatabaseStatus } from '../../types';
 
-export type DashboardPage = 'dashboard' | 'analytics' | 'reports' | 'products' | 'supplies_mgmt' | 'services' | 'inventory' | 'orders' | 'shipping' | 'users' | 'customers' | 'media' | 'blog_mgmt' | 'hero_mgmt' | 'offers' | 'policies' | 'filters' | 'company_info' | 'contact_info' | 'page_content' | 'seo' | 'settings' | 'apikeys' | 'backup' | 'shamcash_settings';
+export type DashboardPage = 'dashboard' | 'analytics' | 'reports' | 'products' | 'supplies_mgmt' | 'services' | 'inventory' | 'orders' | 'shipping' | 'users' | 'customers' | 'media' | 'blog_mgmt' | 'hero_mgmt' | 'offers' | 'policies' | 'filters' | 'company_info' | 'contact_info' | 'page_content' | 'seo' | 'settings' | 'apikeys' | 'backup' | 'shamcash_settings' | 'database_status';
 
 interface DashboardLayoutProps {
     setAppMode: (mode: AppMode) => void;
@@ -41,11 +44,47 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, initialPage }) => {
     const [activePage, setActivePage] = useState<DashboardPage>(initialPage || 'dashboard');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null);
+    const [isDbStatusLoading, setIsDbStatusLoading] = useState(true);
+    const [dbStatusError, setDbStatusError] = useState('');
 
     useEffect(() => {
         if (initialPage && initialPage !== activePage) setActivePage(initialPage);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialPage]);
+
+    const loadDbStatus = useCallback(async () => {
+        try {
+            const nextStatus = await api.getDatabaseStatus({ includeDetails: false });
+            setDbStatus(nextStatus);
+            setDbStatusError('');
+        } catch (error) {
+            setDbStatus(null);
+            if (error instanceof ApiError) {
+                setDbStatusError(error.message);
+            } else {
+                setDbStatusError('تعذر فحص اتصال قاعدة البيانات.');
+            }
+        } finally {
+            setIsDbStatusLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        let isActive = true;
+
+        const run = async () => {
+            if (!isActive) return;
+            await loadDbStatus();
+        };
+
+        run();
+        const intervalId = window.setInterval(run, 30000);
+        return () => {
+            isActive = false;
+            window.clearInterval(intervalId);
+        };
+    }, [loadDbStatus]);
 
     const renderContent = () => {
         switch (activePage) {
@@ -73,6 +112,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
             case 'apikeys': return <ApiKeysPage />;
             case 'backup': return <BackupPage />;
             case 'shamcash_settings': return <ShamCashSettingsPage setPage={setActivePage as any} />;
+            case 'database_status': return <DatabaseStatusPage />;
             case 'dashboard':
             default: return <AdminDashboardPage />;
         }
@@ -99,9 +139,34 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
             case 'page_content': return 'إدارة محتوى الصفحات';
             case 'seo': return 'لوحة تحسين محركات البحث';
             case 'shamcash_settings': return 'إعدادات شام كاش';
+            case 'database_status': return 'حالة قاعدة البيانات';
             default: return 'لوحة التحكم الرئيسية';
         }
-    }
+    };
+
+    const dbStatusBadge = useMemo(() => {
+        if (isDbStatusLoading) {
+            return {
+                text: 'فحص قاعدة البيانات...',
+                className: 'bg-amber-500/15 border-amber-400/30 text-amber-300'
+            };
+        }
+        if (dbStatus?.connected) {
+            return {
+                text: 'قاعدة البيانات متصلة',
+                className: 'bg-emerald-500/15 border-emerald-400/30 text-emerald-300'
+            };
+        }
+        return {
+            text: 'قاعدة البيانات غير متصلة',
+            className: 'bg-red-500/15 border-red-400/30 text-red-300'
+        };
+    }, [dbStatus?.connected, isDbStatusLoading]);
+
+    const handleOpenDbStatus = () => {
+        setActivePage('database_status');
+        setPage('dashboard/database_status' as Page);
+    };
 
     return (
         <div className="relative z-50 flex h-screen bg-[#0a0c10] overflow-hidden text-right" dir="rtl">
@@ -132,7 +197,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                             <h1 className="text-xl font-black text-white">{getPageTitle()}</h1>
                         </div>
                     </div>
-                    <div className="text-sm font-bold text-gray-500 font-poppins">{new Date().toLocaleDateString('ar-SY')}</div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={handleOpenDbStatus}
+                            title={dbStatusError || 'عرض حالة قاعدة البيانات'}
+                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-black transition-colors ${dbStatusBadge.className}`}
+                        >
+                            <span className={`w-2.5 h-2.5 rounded-full ${isDbStatusLoading ? 'bg-amber-300 animate-pulse' : dbStatus?.connected ? 'bg-emerald-300' : 'bg-red-300'}`} />
+                            <span>{dbStatusBadge.text}</span>
+                        </button>
+                        <div className="text-sm font-bold text-gray-500 font-poppins">{new Date().toLocaleDateString('ar-SY')}</div>
+                    </div>
                 </header>
 
                 <main className="flex-1 p-6 md:p-10 overflow-y-auto scrollbar-hide bg-gradient-to-b from-transparent to-gray-900/20">

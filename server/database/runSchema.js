@@ -36,6 +36,13 @@ async function run() {
   const conn = await mysql.createConnection(config);
   console.log('Running schema...');
   await conn.query(sql);
+  // Backward-compatible migration for customer-linked orders.
+  try {
+    await conn.query('ALTER TABLE orders ADD COLUMN customer_id VARCHAR(64) DEFAULT NULL');
+  } catch {}
+  try {
+    await conn.query('CREATE INDEX idx_orders_customer_id ON orders(customer_id)');
+  } catch {}
   await conn.end();
   console.log('Database semo_reptile_house created and schema applied.');
 }

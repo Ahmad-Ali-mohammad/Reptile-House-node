@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Page } from '../App';
 import { CheckCircleIcon } from '../components/icons';
@@ -24,14 +23,14 @@ const OrderConfirmationPage: React.FC<OrderConfirmationPageProps> = ({ setPage, 
                     </div>
                 )}
                 <div className="flex justify-center gap-4 mt-8">
-                    <button 
+                    <button
                         onClick={() => setPage('home')}
                         className="bg-white/10 text-white font-bold py-2 px-6 rounded-lg hover:bg-white/20 transition-colors"
                     >
                         العودة للرئيسية
                     </button>
-                    <button 
-                        onClick={() => setPage('orderTracking')}
+                    <button
+                        onClick={() => setPage(orderId ? (`orderTracking/${orderId}` as Page) : 'orderTracking')}
                         className="bg-amber-500 text-gray-900 font-bold py-2 px-6 rounded-lg hover:bg-amber-400 transition-colors"
                     >
                         تتبع طلبك

@@ -5,11 +5,15 @@ import { api } from '../services/api';
 interface UsePageContentResult {
   pageContent: PageContent;
   loading: boolean;
+  isActive: boolean;
+  hasRemote: boolean;
 }
 
 export function usePageContent(slug: string, fallback: PageContent): UsePageContentResult {
   const [pageContent, setPageContent] = useState<PageContent>(fallback);
   const [loading, setLoading] = useState(true);
+  const [isActive, setIsActive] = useState<boolean>(fallback.isActive);
+  const [hasRemote, setHasRemote] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,9 +22,17 @@ export function usePageContent(slug: string, fallback: PageContent): UsePageCont
       setLoading(true);
       try {
         const row = await api.getPageContentBySlug(slug);
-        if (!cancelled) setPageContent(row);
+        if (!cancelled) {
+          setHasRemote(true);
+          setPageContent(row || fallback);
+          setIsActive(row?.isActive ?? fallback.isActive);
+        }
       } catch {
-        if (!cancelled) setPageContent(fallback);
+        if (!cancelled) {
+          setHasRemote(false);
+          setPageContent(fallback);
+          setIsActive(fallback.isActive);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -33,5 +45,5 @@ export function usePageContent(slug: string, fallback: PageContent): UsePageCont
     };
   }, [slug, fallback]);
 
-  return { pageContent, loading };
+  return { pageContent, loading, isActive, hasRemote };
 }

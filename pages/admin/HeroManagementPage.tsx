@@ -1,17 +1,19 @@
-
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDatabase } from '../../contexts/DatabaseContext';
 import { HeroSlide } from '../../types';
 import { PlusIcon, EditIcon, TrashIcon } from '../../components/icons';
 import HelpButton from '../../components/HelpButton';
 import HelpModal from '../../components/HelpModal';
 import { helpContent } from '../../constants/helpContent';
+import { IMAGE_FILE_ACCEPT, mediaService } from '../../services/media';
 
 const HeroManagementPage: React.FC = () => {
     const { heroSlides, saveHeroSlide, deleteHeroSlide } = useDatabase();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSlide, setEditingSlide] = useState<Partial<HeroSlide> | null>(null);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isImageUploading, setIsImageUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleOpenModal = (slide?: HeroSlide) => {
         if (slide) {
@@ -32,10 +34,37 @@ const HeroManagementPage: React.FC = () => {
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        if (editingSlide) {
-            saveHeroSlide(editingSlide as HeroSlide);
-            setIsModalOpen(false);
-            setEditingSlide(null);
+        if (!editingSlide) return;
+
+        if (isImageUploading) {
+            alert('انتظر حتى يكتمل رفع الصورة أولاً');
+            return;
+        }
+
+        if (!editingSlide.image) {
+            alert('يرجى رفع صورة الشريحة أو إدخال رابط صحيح');
+            return;
+        }
+
+        saveHeroSlide(editingSlide as HeroSlide);
+        setIsModalOpen(false);
+        setEditingSlide(null);
+    };
+
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            mediaService.validateImageFile(file);
+            setIsImageUploading(true);
+            const image = await mediaService.uploadProjectImage(file, 'hero');
+            setEditingSlide(prev => prev ? { ...prev, image } : prev);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'تعذر رفع صورة الشريحة');
+        } finally {
+            setIsImageUploading(false);
+            e.target.value = '';
         }
     };
 
@@ -44,7 +73,7 @@ const HeroManagementPage: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-4xl font-black mb-2">إدارة واجهة الموقع</h1>
-                    <p className="text-gray-400">تحكم في الصور والعناوين التي تظهر في الواجهة الرئيسية</p>
+                    <p className="text-gray-400">تحكم في صور وعناوين الشرائح الظاهرة في الواجهة الرئيسية.</p>
                 </div>
                 <div className="flex gap-3">
                     <HelpButton onClick={() => setIsHelpOpen(true)} />
@@ -97,31 +126,59 @@ const HeroManagementPage: React.FC = () => {
                     />
                     <form onSubmit={handleSave} className="relative w-full max-w-4xl glass-dark border border-white/10 rounded-[3.5rem] p-12 space-y-8 animate-scale-in max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <h2 className="text-4xl font-black tracking-tighter">{editingSlide?.id ? 'تعديل الشريحة' : 'شريحة عرض جديدة'}</h2>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-6">
                                 <div>
                                     <label htmlFor="hero-slide-title" className="text-[10px] font-black text-amber-500 uppercase mb-2 block">عنوان الشريحة</label>
-                                    <input id="hero-slide-title" required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.title || ''} onChange={e => setEditingSlide({...editingSlide, title: e.target.value})} />
+                                    <input id="hero-slide-title" required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.title || ''} onChange={e => setEditingSlide({ ...editingSlide, title: e.target.value })} />
                                 </div>
                                 <div>
                                     <label htmlFor="hero-slide-subtitle" className="text-[10px] font-black text-amber-500 uppercase mb-2 block">النص الوصفي</label>
-                                    <textarea id="hero-slide-subtitle" rows={3} required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold resize-none" value={editingSlide?.subtitle || ''} onChange={e => setEditingSlide({...editingSlide, subtitle: e.target.value})} />
+                                    <textarea id="hero-slide-subtitle" rows={3} required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold resize-none" value={editingSlide?.subtitle || ''} onChange={e => setEditingSlide({ ...editingSlide, subtitle: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-amber-500 uppercase mb-2 block">رفع صورة الشريحة</label>
+                                    <div
+                                        onClick={() => fileInputRef.current?.click()}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                event.preventDefault();
+                                                fileInputRef.current?.click();
+                                            }
+                                        }}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label="رفع صورة الشريحة"
+                                        className="relative aspect-video w-full rounded-[2rem] border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center cursor-pointer hover:border-amber-500 transition-all overflow-hidden"
+                                    >
+                                        {editingSlide?.image ? (
+                                            <img src={editingSlide.image} alt={editingSlide.title || 'صورة الشريحة'} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <PlusIcon className="w-12 h-12 text-gray-600" />
+                                        )}
+                                        {isImageUploading ? (
+                                            <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-sm font-black text-amber-400">
+                                                جاري رفع الصورة...
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                    <input ref={fileInputRef} type="file" accept={IMAGE_FILE_ACCEPT} className="hidden" onChange={handleImageChange} />
                                 </div>
                                 <div>
                                     <label htmlFor="hero-slide-image" className="text-[10px] font-black text-amber-500 uppercase mb-2 block">رابط الصورة</label>
-                                    <input id="hero-slide-image" required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.image || ''} onChange={e => setEditingSlide({...editingSlide, image: e.target.value})} />
+                                    <input id="hero-slide-image" required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.image || ''} onChange={e => setEditingSlide({ ...editingSlide, image: e.target.value })} />
                                 </div>
                             </div>
 
                             <div className="space-y-6">
                                 <div>
                                     <label htmlFor="hero-slide-button-text" className="text-[10px] font-black text-amber-500 uppercase mb-2 block">نص الزر</label>
-                                    <input id="hero-slide-button-text" required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.buttonText || ''} onChange={e => setEditingSlide({...editingSlide, buttonText: e.target.value})} />
+                                    <input id="hero-slide-button-text" required className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.buttonText || ''} onChange={e => setEditingSlide({ ...editingSlide, buttonText: e.target.value })} />
                                 </div>
                                 <div>
                                     <label htmlFor="hero-slide-link" className="text-[10px] font-black text-amber-500 uppercase mb-2 block">الرابط</label>
-                                    <select id="hero-slide-link" className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.link || 'showcase'} onChange={e => setEditingSlide({...editingSlide, link: e.target.value})}>
+                                    <select id="hero-slide-link" className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl p-4 text-white font-bold" value={editingSlide?.link || 'showcase'} onChange={e => setEditingSlide({ ...editingSlide, link: e.target.value })}>
                                         <option value="showcase">المعرض</option>
                                         <option value="services">الخدمات</option>
                                         <option value="blog">المدونة</option>
@@ -129,21 +186,20 @@ const HeroManagementPage: React.FC = () => {
                                     </select>
                                 </div>
                                 <label className="flex items-center gap-4 cursor-pointer p-4 bg-white/5 rounded-2xl border border-white/10">
-                                    <input type="checkbox" className="w-6 h-6 rounded-lg accent-amber-500" checked={editingSlide?.active || false} onChange={e => setEditingSlide({...editingSlide, active: e.target.checked})} />
+                                    <input type="checkbox" className="w-6 h-6 rounded-lg accent-amber-500" checked={editingSlide?.active || false} onChange={e => setEditingSlide({ ...editingSlide, active: e.target.checked })} />
                                     <span className="text-sm font-black text-gray-300">تفعيل في الصفحة الرئيسية</span>
                                 </label>
                             </div>
                         </div>
 
                         <div className="flex gap-4 pt-8">
-                            <button type="submit" className="flex-1 bg-amber-500 text-gray-900 font-black py-5 rounded-2xl hover:bg-amber-400 transition-all text-xl">حفظ التغييرات</button>
+                            <button type="submit" disabled={isImageUploading} className="flex-1 bg-amber-500 text-gray-900 font-black py-5 rounded-2xl hover:bg-amber-400 transition-all text-xl disabled:opacity-60 disabled:cursor-not-allowed">حفظ التغييرات</button>
                             <button type="button" onClick={() => setIsModalOpen(false)} className="px-10 bg-white/5 text-gray-400 font-bold rounded-2xl border border-white/10">إلغاء</button>
                         </div>
                     </form>
                 </div>
             )}
 
-            {/* Help Modal */}
             <HelpModal
                 isOpen={isHelpOpen}
                 onClose={() => setIsHelpOpen(false)}

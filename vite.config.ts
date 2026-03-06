@@ -21,6 +21,10 @@ export default defineConfig(() => {
             target: configuredProxyTarget,
             changeOrigin: true,
           },
+          '/uploads': {
+            target: configuredProxyTarget,
+            changeOrigin: true,
+          },
         },
       },
       plugins: [react()],

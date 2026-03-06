@@ -7,6 +7,7 @@ import HelpButton from '../../components/HelpButton';
 import HelpModal from '../../components/HelpModal';
 import { helpContent } from '../../constants/helpContent';
 import { api } from '../../services/api';
+import { IMAGE_FILE_ACCEPT, mediaService } from '../../services/media';
 
 const OffersManagementPage: React.FC = () => {
     const [offers, setOffers] = useState<PromotionalCard[]>([]);
@@ -18,14 +19,19 @@ const OffersManagementPage: React.FC = () => {
         id: null
     });
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isImageUploading, setIsImageUploading] = useState(false);
 
-    const saveOffers = async (newOffers: PromotionalCard[]) => {
-        setOffers(newOffers);
-        await Promise.all(newOffers.map((offer) => api.saveOffer(offer)));
+    const loadOffers = async () => {
+        try {
+            const rows = await api.getOffers();
+            setOffers(Array.isArray(rows) ? rows : []);
+        } catch {
+            setOffers([]);
+        }
     };
 
     useEffect(() => {
-        api.getOffers().then(setOffers).catch(() => setOffers([]));
+        loadOffers();
     }, []);
 
     const handleOpenModal = (offer?: PromotionalCard) => {
@@ -49,24 +55,30 @@ const OffersManagementPage: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                alert('حجم الصورة كبير جداً. الحد الأقصى 5MB');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setEditingOffer(prev => ({ ...prev, imageUrl: reader.result as string }));
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        try {
+            mediaService.validateImageFile(file);
+            setIsImageUploading(true);
+            const imageUrl = await mediaService.uploadProjectImage(file, 'offers');
+            setEditingOffer(prev => ({ ...prev, imageUrl }));
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'تعذر رفع صورة العرض');
+        } finally {
+            setIsImageUploading(false);
+            e.target.value = '';
         }
     };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (editingOffer) {
+            if (isImageUploading) {
+                alert('انتظر حتى يكتمل رفع الصورة أولاً');
+                return;
+            }
             if (!editingOffer.title || !editingOffer.imageUrl || !editingOffer.startDate || !editingOffer.endDate) {
                 alert('يرجى ملء جميع الحقول المطلوبة ورفع صورة');
                 return;
@@ -86,17 +98,14 @@ const OffersManagementPage: React.FC = () => {
                 buttonLink: editingOffer.buttonLink || ''
             };
 
-            const existingIndex = offers.findIndex(o => o.id === offerToSave.id);
-            let newOffers: PromotionalCard[];
-            if (existingIndex > -1) {
-                newOffers = [...offers];
-                newOffers[existingIndex] = offerToSave;
-            } else {
-                newOffers = [...offers, offerToSave];
+            try {
+                await api.saveOffer(offerToSave);
+                await loadOffers();
+                setIsModalOpen(false);
+                setEditingOffer(null);
+            } catch {
+                alert('تعذر حفظ العرض. يرجى المحاولة مرة أخرى.');
             }
-            await await saveOffers(newOffers);
-            setIsModalOpen(false);
-            setEditingOffer(null);
         }
     };
 
@@ -106,17 +115,25 @@ const OffersManagementPage: React.FC = () => {
 
     const handleConfirmDelete = async () => {
         if (confirmDelete.id) {
-            const newOffers = offers.filter(o => o.id !== confirmDelete.id);
-            await await saveOffers(newOffers);
+            try {
+                await api.deleteOffer(confirmDelete.id);
+                await loadOffers();
+            } catch {
+                alert('تعذر حذف العرض. يرجى المحاولة مرة أخرى.');
+            }
         }
         setConfirmDelete({ isOpen: false, id: null });
     };
 
     const toggleOfferStatus = async (id: string) => {
-        const newOffers = offers.map(o =>
-            o.id === id ? { ...o, isActive: !o.isActive } : o
-        );
-        await await saveOffers(newOffers);
+        const current = offers.find((o) => o.id === id);
+        if (!current) return;
+        try {
+            await api.saveOffer({ ...current, isActive: !current.isActive });
+            await loadOffers();
+        } catch {
+            alert('تعذر تحديث حالة العرض.');
+        }
     };
 
     const isOfferActive = (offer: PromotionalCard) => {
@@ -359,8 +376,13 @@ const OffersManagementPage: React.FC = () => {
                                     ) : (
                                         <PlusIcon className="w-12 h-12 text-gray-600" />
                                     )}
+                                    {isImageUploading ? (
+                                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-sm font-black text-amber-400">
+                                            جاري رفع الصورة...
+                                        </div>
+                                    ) : null}
                                 </div>
-                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} aria-label="اختيار صورة العرض" />
+                                <input type="file" ref={fileInputRef} className="hidden" accept={IMAGE_FILE_ACCEPT} onChange={handleImageChange} aria-label="اختيار صورة العرض" />
                             </div>
 
                             {/* Form Fields */}
@@ -477,7 +499,7 @@ const OffersManagementPage: React.FC = () => {
                         </div>
 
                         <div className="flex gap-6 mt-12">
-                            <button type="submit" className="flex-1 bg-amber-500 text-gray-900 font-black py-5 rounded-[1.5rem] hover:bg-amber-400 shadow-2xl text-lg">
+                            <button type="submit" disabled={isImageUploading} className="flex-1 bg-amber-500 text-gray-900 font-black py-5 rounded-[1.5rem] hover:bg-amber-400 shadow-2xl text-lg disabled:opacity-60 disabled:cursor-not-allowed">
                                 حفظ العرض
                             </button>
                             <button type="button" onClick={() => setIsModalOpen(false)} className="px-10 bg-white/5 text-gray-400 font-black rounded-[1.5rem] border border-white/5">
@@ -500,4 +522,5 @@ const OffersManagementPage: React.FC = () => {
 };
 
 export default OffersManagementPage;
+
 

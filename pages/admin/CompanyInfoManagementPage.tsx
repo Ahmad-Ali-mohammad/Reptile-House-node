@@ -6,6 +6,7 @@ import { EditIcon, CheckCircleIcon } from '../../components/icons';
 import HelpButton from '../../components/HelpButton';
 import HelpModal from '../../components/HelpModal';
 import { helpContent } from '../../constants/helpContent';
+import { IMAGE_FILE_ACCEPT, mediaService } from '../../services/media';
 
 const CompanyInfoManagementPage: React.FC = () => {
     const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({ name: '', nameEnglish: '', description: '', foundedYear: 0, mission: '', vision: '', story: '', logoUrl: '', mascotUrl: '' });
@@ -26,52 +27,53 @@ const CompanyInfoManagementPage: React.FC = () => {
         }).catch(() => {});
     }, []);
 
-    const handleImageChange = (type: 'logo' | 'mascot', e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (type: 'logo' | 'mascot', e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            alert('حجم الصورة كبير جداً. الحد الأقصى 5MB');
-            return;
-        }
-
-        if (!file.type.startsWith('image/')) {
-            alert('يرجى رفع صورة فقط');
-            return;
-        }
-
         setIsImageProcessing(prev => ({ ...prev, [type]: true }));
-        const reader = new FileReader();
-        reader.onloadend = () => {
+
+        try {
+            mediaService.validateImageFile(file);
+            const category = type === 'logo' ? 'company-logo' : 'company-mascot';
+            const imageUrl = await mediaService.uploadProjectImage(file, category);
             if (type === 'logo') {
-                setEditedInfo(prev => ({ ...prev, logoUrl: reader.result as string }));
+                setEditedInfo(prev => ({ ...prev, logoUrl: imageUrl }));
             } else {
-                setEditedInfo(prev => ({ ...prev, mascotUrl: reader.result as string }));
+                setEditedInfo(prev => ({ ...prev, mascotUrl: imageUrl }));
             }
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'فشل تحميل الصورة. يرجى المحاولة مرة أخرى.');
+        } finally {
             setIsImageProcessing(prev => ({ ...prev, [type]: false }));
-        };
-        reader.onerror = () => {
-            alert('فشل تحميل الصورة. يرجى المحاولة مرة أخرى.');
-            setIsImageProcessing(prev => ({ ...prev, [type]: false }));
-        };
-        reader.readAsDataURL(file);
+            e.target.value = '';
+        }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!editedInfo.name || !editedInfo.nameEnglish || !editedInfo.description) {
             alert('يرجى ملء جميع الحقول المطلوبة');
             return;
         }
 
+        if (isImageProcessing.logo || isImageProcessing.mascot) {
+            alert('انتظر حتى يكتمل رفع الصور أولاً');
+            return;
+        }
+
         setIsSaving(true);
-        setTimeout(() => {
-            api.saveCompanyInfo(editedInfo).catch(() => {});
-            setCompanyInfo(editedInfo);
+        try {
+            const savedInfo = await api.saveCompanyInfo(editedInfo);
+            setCompanyInfo(savedInfo);
+            setEditedInfo(savedInfo);
             setIsEditing(false);
-            setIsSaving(false);
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 3000);
-        }, 500);
+        } catch {
+            alert('تعذر حفظ معلومات الشركة. يرجى المحاولة مرة أخرى.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleCancel = () => {
@@ -269,7 +271,7 @@ const CompanyInfoManagementPage: React.FC = () => {
                                 <input
                                     id="company-logo-upload"
                                     type="file"
-                                    accept="image/*"
+                                    accept={IMAGE_FILE_ACCEPT}
                                     onChange={e => handleImageChange('logo', e)}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     aria-label="رفع شعار الشركة"
@@ -300,7 +302,7 @@ const CompanyInfoManagementPage: React.FC = () => {
                                 <input
                                     id="company-mascot-upload"
                                     type="file"
-                                    accept="image/*"
+                                    accept={IMAGE_FILE_ACCEPT}
                                     onChange={e => handleImageChange('mascot', e)}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     aria-label="رفع صورة الماسكوت"
@@ -404,4 +406,5 @@ const CompanyInfoManagementPage: React.FC = () => {
 };
 
 export default CompanyInfoManagementPage;
+
 

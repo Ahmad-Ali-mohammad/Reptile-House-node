@@ -4,7 +4,10 @@ import { useDatabase } from '../contexts/DatabaseContext';
 import ReptileCard, { CardVariant } from '../components/ReptileCard';
 import FilterSidebar from '../components/FilterSidebar';
 import { FilterIcon, GridIcon, ListIcon, ChevronDownIcon, SearchIcon } from '../components/icons';
+import PageNotAvailable from '../components/PageNotAvailable';
 import { Page } from '../App';
+import { usePageContent } from '../hooks/usePageContent';
+import { PageContent } from '../types';
 
 export type Filters = {
     categories: string[];
@@ -19,8 +22,21 @@ interface ShowcasePageProps {
     setPage: (page: Page | string) => void;
 }
 
+const showcaseFallback: PageContent = {
+    id: 'fallback-showcase',
+    slug: 'showcase',
+    title: 'المعرض',
+    excerpt: '',
+    content: '',
+    seoTitle: 'المعرض - بيت الزواحف',
+    seoDescription: '',
+    isActive: true,
+    updatedAt: new Date().toISOString().slice(0, 10),
+};
+
 const ShowcasePage: React.FC<ShowcasePageProps> = ({ setPage }) => {
     const { products } = useDatabase();
+    const { pageContent, loading, isActive } = usePageContent('showcase', showcaseFallback);
     const [filters, setFilters] = useState<Filters>({
         categories: [],
         price: 10000,
@@ -73,16 +89,31 @@ const ShowcasePage: React.FC<ShowcasePageProps> = ({ setPage }) => {
         }
     }, [isFilterOpen]);
 
+    if (loading) {
+        return <div className="animate-fade-in text-center py-20">جاري التحميل...</div>;
+    }
+
+    if (!isActive) {
+        return <PageNotAvailable title={pageContent.title || 'صفحة المعرض غير متاحة حالياً'} />;
+    }
+
     return (
         <div className="max-w-[1440px] mx-auto px-4 pb-24 md:pb-20">
             {/* Header / Intro */}
             <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-right">
                 <div className="animate-slide-up">
-                    <div className="inline-block bg-amber-500/10 text-amber-500 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 border border-amber-500/20">
-                        الكتالوج الشامل
-                    </div>
-                    <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-none text-white">معرض الزواحف</h1>
-                    <p className="text-lg md:text-xl text-gray-400 mt-6 max-w-lg font-bold leading-relaxed">اكتشف أرقى أنواع الزواحف المختارة بعناية من خبراء Reptile House بدمشق.</p>
+                    <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-none text-white">
+                        {pageContent.title || 'المعرض'}
+                    </h1>
+                    {pageContent.excerpt && (
+                        <p className="text-lg md:text-xl text-gray-400 mt-6 max-w-lg font-bold leading-relaxed">{pageContent.excerpt}</p>
+                    )}
+                    {pageContent.content?.trim() && (
+                        <div
+                            className="mt-6 bg-white/5 border border-white/10 rounded-2xl p-5 text-gray-300 leading-loose text-right"
+                            dangerouslySetInnerHTML={{ __html: pageContent.content }}
+                        />
+                    )}
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end animate-fade-in delay-200">

@@ -80,6 +80,7 @@ const sidebarConfig = [
       { name: "معلومات الشركة", page: 'company_info' as DashboardPage, icon: <UserIcon className="w-5 h-5" /> },
       { name: "معلومات التواصل", page: 'contact_info' as DashboardPage, icon: <UserIcon className="w-5 h-5" /> },
       { name: "الإعدادات", page: 'settings' as DashboardPage, icon: <UserIcon className="w-5 h-5" /> },
+      { name: "حالة قاعدة البيانات", page: 'database_status' as DashboardPage, icon: <DocumentIcon className="w-5 h-5" /> },
       { name: "السياسات والضمانات", page: 'policies' as DashboardPage, icon: <DocumentIcon className="w-5 h-5" /> },
       { name: "إعدادات شام كاش", page: 'shamcash_settings' as DashboardPage, icon: <ClipboardListIcon className="w-5 h-5" /> },
       { name: "مفاتيح الواجهة البرمجية", page: 'apikeys' as DashboardPage, icon: <UserIcon className="w-5 h-5" /> },

@@ -52,6 +52,7 @@ const pathToPage = (pathname: string): string => {
   if (clean === '/forgot-password') return 'forgotPassword';
   if (clean === '/reset-password') return 'resetPassword';
   if (clean === '/order-confirmation') return 'orderConfirmation';
+  if (clean.startsWith('/order-tracking/')) return `orderTracking/${clean.split('/')[2] || ''}`;
   if (clean === '/order-tracking') return 'orderTracking';
   if (clean.startsWith('/dashboard/')) return `dashboard/${clean.replace('/dashboard/', '')}`;
   if (clean === '/dashboard') return 'dashboard';
@@ -88,6 +89,7 @@ const pageToPath = (page: string): string => {
   if (page === 'forgotPassword') return '/forgot-password';
   if (page === 'resetPassword') return '/reset-password';
   if (page === 'orderConfirmation') return '/order-confirmation';
+  if (page.startsWith('orderTracking/')) return `/order-tracking/${page.split('/')[1] || ''}`;
   if (page === 'orderTracking') return '/order-tracking';
   if (page === 'home') return '/';
   return `/${page}`;
@@ -140,6 +142,10 @@ const AppContent: React.FC = () => {
       const id = parseInt(currentPage.split('/')[1], 10);
       return <ArticleDetailsPage articleId={id} setPage={setPage} />;
     }
+    if (currentPage.startsWith('orderTracking/')) {
+      const id = currentPage.split('/')[1] || '';
+      return <OrderTrackingPage setPage={setPage as any} orderId={id} />;
+    }
 
     switch (currentPage) {
       case 'login': return <LoginPage setPage={setPage as any} />;
@@ -151,7 +157,7 @@ const AppContent: React.FC = () => {
       case 'cart': return <CartPage setPage={setPage as any} />;
       case 'checkout': return <CheckoutPage setPage={setPage as any} setLastOrderId={setLastOrderId} />;
       case 'orderConfirmation': return <OrderConfirmationPage setPage={setPage as any} orderId={lastOrderId} />;
-      case 'orderTracking': return <OrderTrackingPage setPage={setPage as any} orderId={lastOrderId || 'RH-1025'} />;
+      case 'orderTracking': return <OrderTrackingPage setPage={setPage as any} orderId={lastOrderId || ''} />;
       case 'forgotPassword': return <ForgotPasswordPage setPage={setPage as any} />;
       case 'resetPassword': return <ResetPasswordPage setPage={setPage as any} />;
       case 'about': return <AboutPage />;
@@ -163,7 +169,7 @@ const AppContent: React.FC = () => {
       case 'terms': return <TermsPage />;
       case 'blog': return <BlogPage setPage={setPage as any} />;
       case 'services': return <ServicesPage />;
-      case 'offers': return <OffersPage />;
+      case 'offers': return <OffersPage setPage={setPage as any} />;
       case 'supplies': return <SuppliesPage setPage={setPage as any} />;
       case 'home':
       default: return <HomePage setPage={setPage as any} />;

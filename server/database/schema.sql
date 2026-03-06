@@ -1,6 +1,6 @@
--- Ù‚Ø§Ø¹Ø¯Ø© Ø¨ÙŠØ§Ù†Ø§Øª Ø¨ÙŠØª Ø§Ù„Ø­ÙŠØ§ÙŠØ§ - MySQL
--- ØªØ´ØºÙŠÙ„: mysql -u root -p < server/database/schema.sql
--- Ø£Ùˆ Ø§Ø³ØªÙŠØ±Ø§Ø¯ Ù…Ù† Ø£Ø¯ÙˆØ§Øª Ø¥Ø¯Ø§Ø±Ø© MySQL
+-- قاعدة بيانات بيت الحيايا - MySQL
+-- تشغيل: mysql -u root -p < server/database/schema.sql
+-- أو استيراد من أدوات إدارة MySQL
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -8,7 +8,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 CREATE DATABASE IF NOT EXISTS semo_reptile_house CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE semo_reptile_house;
 
--- Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙˆÙ†
+-- المستخدمون
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR(64) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª (Ø²ÙˆØ§Ø­Ù)
+-- المنتجات (زواحف)
 CREATE TABLE IF NOT EXISTS products (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS products (
   image_url VARCHAR(1024) NOT NULL DEFAULT '',
   rating DECIMAL(3,2) NOT NULL DEFAULT 5,
   is_available TINYINT(1) NOT NULL DEFAULT 1,
-  status VARCHAR(32) NOT NULL DEFAULT 'Ù…ØªÙˆÙØ±',
+  status VARCHAR(32) NOT NULL DEFAULT 'متوفر',
   category VARCHAR(32) NOT NULL,
   specifications JSON,
   reviews JSON,
@@ -38,20 +38,20 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø§Ù„Ø·Ù„Ø¨Ø§Øª
+-- الطلبات
 CREATE TABLE IF NOT EXISTS orders (
   id VARCHAR(64) PRIMARY KEY,
   date VARCHAR(32) NOT NULL,
-  status VARCHAR(32) NOT NULL DEFAULT 'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©',
+  status VARCHAR(32) NOT NULL DEFAULT 'قيد المعالجة',
   total DECIMAL(12,2) NOT NULL DEFAULT 0,
   payment_confirmation_image VARCHAR(1024) DEFAULT NULL,
   payment_method VARCHAR(32) DEFAULT NULL,
-  payment_verification_status VARCHAR(32) NOT NULL DEFAULT 'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©',
+  payment_verification_status VARCHAR(32) NOT NULL DEFAULT 'قيد المراجعة',
   rejection_reason TEXT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø¹Ù†Ø§ØµØ± Ø§Ù„Ø·Ù„Ø¨
+-- عناصر الطلب
 CREATE TABLE IF NOT EXISTS order_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
   order_id VARCHAR(64) NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   INDEX idx_order (order_id)
 );
 
--- Ø§Ù„Ù…Ù‚Ø§Ù„Ø§Øª
+-- المقالات
 CREATE TABLE IF NOT EXISTS articles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS articles (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø§Ù„Ù…Ø³ØªÙ„Ø²Ù…Ø§Øª
+-- المستلزمات
 CREATE TABLE IF NOT EXISTS supplies (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -87,11 +87,11 @@ CREATE TABLE IF NOT EXISTS supplies (
   image_url VARCHAR(1024) NOT NULL DEFAULT '',
   rating DECIMAL(3,2) NOT NULL DEFAULT 5,
   is_available TINYINT(1) NOT NULL DEFAULT 1,
-  status VARCHAR(32) NOT NULL DEFAULT 'Ù…ØªÙˆÙØ±',
+  status VARCHAR(32) NOT NULL DEFAULT 'متوفر',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø´Ø±Ø§Ø¦Ø­ Ø§Ù„Ù‡ÙŠØ±Ùˆ
+-- شرائح الهيرو
 CREATE TABLE IF NOT EXISTS hero_slides (
   id VARCHAR(64) PRIMARY KEY,
   image VARCHAR(1024) NOT NULL DEFAULT '',
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS hero_slides (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø§Ù„Ø¹Ù†Ø§ÙˆÙŠÙ†
+-- العناوين
 CREATE TABLE IF NOT EXISTS addresses (
   id INT AUTO_INCREMENT PRIMARY KEY,
   label VARCHAR(128) NOT NULL,
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS addresses (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ø´Ø±ÙƒØ© (ØµÙ ÙˆØ§Ø­Ø¯)
+-- معلومات الشركة (صف واحد)
 CREATE TABLE IF NOT EXISTS company_info (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL DEFAULT '',
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS company_info (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„ØªÙˆØ§ØµÙ„ (ØµÙ ÙˆØ§Ø­Ø¯)
+-- معلومات التواصل (صف واحد)
 CREATE TABLE IF NOT EXISTS contact_info (
   id INT AUTO_INCREMENT PRIMARY KEY,
   phone VARCHAR(64) NOT NULL DEFAULT '',
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS contact_info (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø´Ø§Ù… ÙƒØ§Ø´ (ØµÙ ÙˆØ§Ø­Ø¯)
+-- إعدادات شام كاش (صف واحد)
 CREATE TABLE IF NOT EXISTS shamcash_config (
   id INT AUTO_INCREMENT PRIMARY KEY,
   barcode_image_url VARCHAR(1024) NOT NULL DEFAULT '',
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS seo_settings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Ø£Ø¹Ø¶Ø§Ø¡ Ø§Ù„ÙØ±ÙŠÙ‚
+-- أعضاء الفريق
 CREATE TABLE IF NOT EXISTS team_members (
   id VARCHAR(64) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS team_members (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ù…Ø¬Ù…ÙˆØ¹Ø§Øª Ø§Ù„ÙÙ„Ø§ØªØ±
+-- مجموعات الفلاتر
 CREATE TABLE IF NOT EXISTS filter_groups (
   id VARCHAR(64) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS filter_groups (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø®ÙŠØ§Ø±Ø§Øª Ø§Ù„ÙÙ„ØªØ±
+-- خيارات الفلتر
 CREATE TABLE IF NOT EXISTS filter_options (
   id VARCHAR(64) PRIMARY KEY,
   filter_group_id VARCHAR(64) NOT NULL,
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS filter_options (
   INDEX idx_group (filter_group_id)
 );
 
--- Ø§Ù„ØªØµÙ†ÙŠÙØ§Øª Ø§Ù„Ù…Ø®ØµØµØ©
+-- التصنيفات المخصصة
 CREATE TABLE IF NOT EXISTS custom_categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
   value VARCHAR(64) NOT NULL,
@@ -221,14 +221,14 @@ CREATE TABLE IF NOT EXISTS custom_categories (
   UNIQUE KEY uq_value (value)
 );
 
--- Ø§Ù„Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ù…Ø®ØµØµØ©
+-- الأنواع المخصصة
 CREATE TABLE IF NOT EXISTS custom_species (
   id INT AUTO_INCREMENT PRIMARY KEY,
   species VARCHAR(255) NOT NULL,
   UNIQUE KEY uq_species (species(191))
 );
 
--- Ø§Ù„Ø³ÙŠØ§Ø³Ø§Øª
+-- السياسات
 CREATE TABLE IF NOT EXISTS policies (
   id VARCHAR(64) PRIMARY KEY,
   type VARCHAR(32) NOT NULL,
@@ -240,7 +240,7 @@ CREATE TABLE IF NOT EXISTS policies (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ø§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„ØªØ±ÙˆÙŠØ¬ÙŠØ©
+-- العروض الترويجية
 CREATE TABLE IF NOT EXISTS offers (
   id VARCHAR(64) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS services (
   INDEX idx_published (is_published)
 );
 
--- Ù…Ø­ØªÙˆÙ‰ Ø§Ù„ØµÙØ­Ø§Øª (CMS)
+-- محتوى الصفحات (CMS)
 CREATE TABLE IF NOT EXISTS page_contents (
   id VARCHAR(64) PRIMARY KEY,
   slug VARCHAR(128) NOT NULL,
@@ -330,10 +330,10 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   UNIQUE KEY uq_user_prefs (user_id)
 );
 
--- Ø¥Ø¯Ø±Ø§Ø¬ ØµÙ Ø§ÙØªØ±Ø§Ø¶ÙŠ Ù„Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø£Ø­Ø§Ø¯ÙŠØ©
+-- إدراج صف افتراضي للإعدادات الأحادية
 INSERT IGNORE INTO company_info (id, name, name_english) VALUES (1, 'Reptile House', 'Reptile House');
-INSERT IGNORE INTO contact_info (id, phone, email, address, city, country, working_hours) VALUES (1, '+963 XXX XXX XXX', 'info@reptilehouse.sy', 'Ø¯Ù…Ø´Ù‚ØŒ Ø³ÙˆØ±ÙŠØ§', 'Ø¯Ù…Ø´Ù‚', 'Ø³ÙˆØ±ÙŠØ§', 'Ø§Ù„Ø³Ø¨Øª - Ø§Ù„Ø®Ù…ÙŠØ³: 9:00 - 20:00');
-INSERT IGNORE INTO shamcash_config (id, account_code, payment_instructions) VALUES (1, '000000000000', 'Ù‚Ù… Ø¨Ù…Ø³Ø­ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯ Ø£Ùˆ Ø¥Ø¯Ø®Ø§Ù„ Ø±Ù‚Ù… Ø§Ù„Ø­Ø³Ø§Ø¨ ÙŠØ¯ÙˆÙŠØ§Ù‹.');
+INSERT IGNORE INTO contact_info (id, phone, email, address, city, country, working_hours) VALUES (1, '+963 XXX XXX XXX', 'info@reptilehouse.sy', 'دمشق، سوريا', 'دمشق', 'سوريا', 'السبت - الخميس: 9:00 - 20:00');
+INSERT IGNORE INTO shamcash_config (id, account_code, payment_instructions) VALUES (1, '000000000000', 'قم بمسح الباركود أو إدخال رقم الحساب يدوياً.');
 INSERT IGNORE INTO seo_settings (id) VALUES (1);
 INSERT IGNORE INTO user_preferences (id, user_id, theme, language, notifications_enabled) VALUES (1, 'default', 'dark', 'ar', 1);
 
