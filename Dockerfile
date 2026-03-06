@@ -23,8 +23,11 @@ COPY --from=backend-deps /app/server/node_modules ./node_modules
 COPY server ./ 
 COPY --from=frontend-builder /app/dist /app/dist
 
-RUN mkdir -p /app/server/uploads/media
+RUN mkdir -p /app/server/uploads/media \
+  && chown -R node:node /app/server /app/dist
 
 EXPOSE 3001
+
+USER node
 
 CMD ["node", "start-production.mjs"]
