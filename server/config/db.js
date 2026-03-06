@@ -1,8 +1,7 @@
-import mysql from 'mysql2/promise';
+import mysql from 'mysql2';
+import { MYSQL_CHARSET, MYSQL_SESSION_SQL } from './mysqlCharset.js';
 
-const MYSQL_COLLATION = 'utf8mb4_unicode_ci';
-
-const pool = mysql.createPool({
+const rawPool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306', 10),
   user: process.env.DB_USER || 'root',
@@ -11,8 +10,18 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  charset: MYSQL_COLLATION,
+  charset: MYSQL_CHARSET,
 });
+
+rawPool.on('connection', (connection) => {
+  connection.query(MYSQL_SESSION_SQL, (error) => {
+    if (error) {
+      console.error('[db] Failed to apply UTF-8 session settings:', error.message);
+    }
+  });
+});
+
+const pool = rawPool.promise();
 
 export function isDbConfigured() {
   return !!(process.env.DB_HOST || process.env.DB_USER || process.env.DB_NAME);

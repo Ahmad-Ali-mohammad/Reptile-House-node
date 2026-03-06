@@ -7,6 +7,7 @@ import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { applyUtf8Session, MYSQL_CHARSET, MYSQL_COLLATION } from '../config/mysqlCharset.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // تحميل .env من مجلد server إن وُجد
@@ -27,16 +28,47 @@ const config = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   multipleStatements: true,
-  charset: 'utf8mb4_unicode_ci',
+  charset: MYSQL_CHARSET,
 };
+
+async function applyUtf8Migrations(conn) {
+  const statements = [
+    `ALTER TABLE products MODIFY status VARCHAR(32) CHARACTER SET ${MYSQL_CHARSET} COLLATE ${MYSQL_COLLATION} NOT NULL DEFAULT 'متوفر'`,
+    `ALTER TABLE supplies MODIFY status VARCHAR(32) CHARACTER SET ${MYSQL_CHARSET} COLLATE ${MYSQL_COLLATION} NOT NULL DEFAULT 'متوفر'`,
+    `ALTER TABLE orders MODIFY status VARCHAR(32) CHARACTER SET ${MYSQL_CHARSET} COLLATE ${MYSQL_COLLATION} NOT NULL DEFAULT 'قيد المعالجة'`,
+    `ALTER TABLE orders MODIFY payment_verification_status VARCHAR(32) CHARACTER SET ${MYSQL_CHARSET} COLLATE ${MYSQL_COLLATION} NOT NULL DEFAULT 'قيد المراجعة'`,
+    `UPDATE products
+      SET status = 'متوفر'
+      WHERE is_available = 1
+        AND (status IS NULL OR TRIM(status) = '' OR status = 'Available' OR status REGEXP '^[?]+$')`,
+    `UPDATE products
+      SET status = 'غير متوفر'
+      WHERE is_available = 0
+        AND (status IS NULL OR TRIM(status) = '' OR status = 'Unavailable' OR status REGEXP '^[?]+$')`,
+    `UPDATE supplies
+      SET status = 'متوفر'
+      WHERE is_available = 1
+        AND (status IS NULL OR TRIM(status) = '' OR status = 'Available' OR status REGEXP '^[?]+$')`,
+    `UPDATE supplies
+      SET status = 'غير متوفر'
+      WHERE is_available = 0
+        AND (status IS NULL OR TRIM(status) = '' OR status = 'Unavailable' OR status REGEXP '^[?]+$')`,
+  ];
+
+  for (const statement of statements) {
+    await conn.query(statement);
+  }
+}
 
 async function run() {
   const schemaPath = path.join(__dirname, 'schema.sql');
   const sql = fs.readFileSync(schemaPath, 'utf8');
   console.log('Connecting to MySQL...');
   const conn = await mysql.createConnection(config);
+  await applyUtf8Session(conn);
   console.log('Running schema...');
   await conn.query(sql);
+  await applyUtf8Migrations(conn);
   // Backward-compatible migration for customer-linked orders.
   try {
     await conn.query('ALTER TABLE orders ADD COLUMN customer_id VARCHAR(64) DEFAULT NULL');

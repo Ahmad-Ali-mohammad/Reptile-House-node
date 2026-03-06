@@ -11,6 +11,18 @@ import { defaultCategories } from '../../constants';
 import { helpContent } from '../../constants/helpContent';
 import { IMAGE_FILE_ACCEPT, mediaService } from '../../services/media';
 
+const DEFAULT_AVAILABLE_STATUS = 'متوفر';
+
+const normalizeAvailabilityStatus = (value?: string): string => {
+    const normalized = value?.trim();
+    return normalized || DEFAULT_AVAILABLE_STATUS;
+};
+
+const statusMeansAvailable = (value?: string): boolean => {
+    const normalized = normalizeAvailabilityStatus(value).toLowerCase();
+    return !['غير متوفر', 'نفذ من المخزون', 'نفذت من المخزون', 'out of stock', 'unavailable', 'sold out'].includes(normalized);
+};
+
 const ProductsManagementPage: React.FC = () => {
     const { products, addProduct, deleteProduct } = useDatabase();
     const [activeTab, setActiveTab] = useState('all_products');
@@ -69,7 +81,7 @@ const ProductsManagementPage: React.FC = () => {
                 price: 0,
                 imageUrl: '',
                 category: 'snake',
-                status: 'متوفر',
+                status: DEFAULT_AVAILABLE_STATUS,
                 isAvailable: true,
                 rating: 5.0,
                 description: ''
@@ -107,10 +119,13 @@ const ProductsManagementPage: React.FC = () => {
                 return;
             }
 
+            const normalizedStatus = normalizeAvailabilityStatus(editingProduct.status);
             const productToSave: Reptile = {
                 ...editingProduct as Reptile,
                 category: editingProduct.category as any,
                 species: editingProduct.species as string,
+                status: normalizedStatus as Reptile['status'],
+                isAvailable: statusMeansAvailable(normalizedStatus),
                 price: Number(editingProduct.price) || 0,
                 id: Number(editingProduct.id) || 0
             };
@@ -330,7 +345,7 @@ const ProductsManagementPage: React.FC = () => {
                                         onChange={e => setEditingProduct({
                                             ...editingProduct,
                                             status: e.target.value as any,
-                                            isAvailable: e.target.value === 'متوفر'
+                                            isAvailable: statusMeansAvailable(e.target.value)
                                         })}
                                         placeholder="مثلاً: متوفر، قيد الحجز، غير متوفر"
                                     />
@@ -375,4 +390,3 @@ const ProductsManagementPage: React.FC = () => {
 };
 
 export default ProductsManagementPage;
-

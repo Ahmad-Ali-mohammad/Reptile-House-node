@@ -8,6 +8,7 @@ import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { applyUtf8Session, MYSQL_CHARSET } from '../config/mysqlCharset.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,7 +30,7 @@ const db = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'semo_reptile_house',
-  charset: 'utf8mb4_unicode_ci',
+  charset: MYSQL_CHARSET,
 };
 
 const defaultPolicies = [
@@ -88,6 +89,7 @@ const defaultPages = [
 
 async function run() {
   const conn = await mysql.createConnection(db);
+  await applyUtf8Session(conn);
   const today = new Date().toISOString().split('T')[0];
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
 

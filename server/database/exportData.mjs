@@ -4,6 +4,7 @@ import path from 'path';
 import mysql from 'mysql2';
 import mysqlPromise from 'mysql2/promise';
 import { fileURLToPath } from 'url';
+import { applyUtf8Session, MYSQL_CHARSET } from '../config/mysqlCharset.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,8 +24,6 @@ try {
 
 const dbName = process.env.DB_NAME || 'semo_reptile_house';
 const outputPath = path.join(__dirname, 'current-data.sql');
-const MYSQL_COLLATION = 'utf8mb4_unicode_ci';
-
 function escapeIdentifier(identifier) {
   return `\`${String(identifier).replace(/`/g, '``')}\``;
 }
@@ -44,8 +43,9 @@ async function run() {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: dbName,
-    charset: MYSQL_COLLATION,
+    charset: MYSQL_CHARSET,
   });
+  await applyUtf8Session(conn);
 
   const [tables] = await conn.query(
     `SELECT table_name AS tableName

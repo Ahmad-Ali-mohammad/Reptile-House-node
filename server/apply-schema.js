@@ -6,11 +6,10 @@ import mysql from 'mysql2/promise';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { applyUtf8Session, MYSQL_CHARSET } from './config/mysqlCharset.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const MYSQL_COLLATION = 'utf8mb4_unicode_ci';
-
 async function applySchema() {
   let conn;
 
@@ -23,11 +22,12 @@ async function applySchema() {
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'semo_reptile_house',
       multipleStatements: true, // Important for executing multiple SQL statements
-      charset: MYSQL_COLLATION
+      charset: MYSQL_CHARSET
     };
 
     console.log('Connecting to database...');
     conn = await mysql.createConnection(dbConfig);
+    await applyUtf8Session(conn);
     console.log('✓ Connected to database');
 
     // Read schema.sql
