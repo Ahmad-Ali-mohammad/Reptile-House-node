@@ -8,11 +8,35 @@ import HelpModal from '../../components/HelpModal';
 import { helpContent } from '../../constants/helpContent';
 import { IMAGE_FILE_ACCEPT, mediaService } from '../../services/media';
 
+const emptyCompanyInfo: CompanyInfo = {
+    name: '',
+    nameEnglish: '',
+    description: '',
+    foundedYear: 0,
+    mission: '',
+    vision: '',
+    story: '',
+    logoUrl: '',
+    mascotUrl: ''
+};
+
+const normalizeCompanyInfo = (value?: Partial<CompanyInfo> | null): CompanyInfo => ({
+    name: typeof value?.name === 'string' ? value.name : '',
+    nameEnglish: typeof value?.nameEnglish === 'string' ? value.nameEnglish : '',
+    description: typeof value?.description === 'string' ? value.description : '',
+    foundedYear: typeof value?.foundedYear === 'number' && Number.isFinite(value.foundedYear) ? value.foundedYear : 0,
+    mission: typeof value?.mission === 'string' ? value.mission : '',
+    vision: typeof value?.vision === 'string' ? value.vision : '',
+    story: typeof value?.story === 'string' ? value.story : '',
+    logoUrl: typeof value?.logoUrl === 'string' ? value.logoUrl : '',
+    mascotUrl: typeof value?.mascotUrl === 'string' ? value.mascotUrl : ''
+});
+
 const CompanyInfoManagementPage: React.FC = () => {
-    const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({ name: '', nameEnglish: '', description: '', foundedYear: 0, mission: '', vision: '', story: '', logoUrl: '', mascotUrl: '' });
+    const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(emptyCompanyInfo);
     const [isEditing, setIsEditing] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
-    const [editedInfo, setEditedInfo] = useState<CompanyInfo>(companyInfo);
+    const [editedInfo, setEditedInfo] = useState<CompanyInfo>(emptyCompanyInfo);
     const [isSaving, setIsSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [isImageProcessing, setIsImageProcessing] = useState<{ logo: boolean; mascot: boolean }>({
@@ -22,8 +46,9 @@ const CompanyInfoManagementPage: React.FC = () => {
 
     useEffect(() => {
         api.getCompanyInfo().then((info) => {
-            setCompanyInfo(info);
-            setEditedInfo(info);
+            const normalizedInfo = normalizeCompanyInfo(info);
+            setCompanyInfo(normalizedInfo);
+            setEditedInfo(normalizedInfo);
         }).catch(() => {});
     }, []);
 
@@ -63,14 +88,15 @@ const CompanyInfoManagementPage: React.FC = () => {
 
         setIsSaving(true);
         try {
-            const savedInfo = await api.saveCompanyInfo(editedInfo);
+            const payload = normalizeCompanyInfo(editedInfo);
+            const savedInfo = normalizeCompanyInfo(await api.saveCompanyInfo(payload));
             setCompanyInfo(savedInfo);
             setEditedInfo(savedInfo);
             setIsEditing(false);
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 3000);
-        } catch {
-            alert('تعذر حفظ معلومات الشركة. يرجى المحاولة مرة أخرى.');
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'تعذر حفظ معلومات الشركة. يرجى المحاولة مرة أخرى.');
         } finally {
             setIsSaving(false);
         }

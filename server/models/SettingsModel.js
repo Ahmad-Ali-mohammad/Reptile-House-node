@@ -1,18 +1,89 @@
 import pool from '../config/db.js';
 import { rowToCamel, objToSnake } from '../utils/rowMapper.js';
 
+const BLOCKED_COLUMNS = new Set(['id', 'created_at', 'updated_at']);
+
+const SINGLE_ROW_ALLOWLISTS = {
+  company_info: new Set([
+    'name',
+    'name_english',
+    'description',
+    'founded_year',
+    'mission',
+    'vision',
+    'story',
+    'logo_url',
+    'mascot_url',
+  ]),
+  contact_info: new Set([
+    'phone',
+    'email',
+    'address',
+    'city',
+    'country',
+    'working_hours',
+    'social_media',
+  ]),
+  shamcash_config: new Set([
+    'barcode_image_url',
+    'account_code',
+    'is_active',
+    'account_holder_name',
+    'phone_number',
+    'payment_instructions',
+  ]),
+  seo_settings: new Set([
+    'site_name',
+    'default_title',
+    'title_separator',
+    'default_description',
+    'default_keywords',
+    'canonical_base_url',
+    'default_og_image',
+    'twitter_handle',
+    'robots_index',
+    'robots_follow',
+    'google_verification',
+    'bing_verification',
+    'yandex_verification',
+    'locale',
+    'theme_color',
+    'organization_name',
+    'organization_logo',
+    'organization_description',
+    'sitemap_enabled',
+    'excluded_paths',
+    'custom_robots_txt',
+  ]),
+};
+
 async function getSingle(table, id = 1) {
   const [rows] = await pool.query(`SELECT * FROM ${table} WHERE id = ?`, [id]);
   return rows[0] ? rowToCamel(rows[0]) : null;
 }
 
+function sanitizeSingleRowPayload(table, data) {
+  const allowlist = SINGLE_ROW_ALLOWLISTS[table];
+  const snakeData = objToSnake(data);
+  const sanitized = {};
+
+  for (const [key, value] of Object.entries(snakeData)) {
+    if (value === undefined) continue;
+    if (BLOCKED_COLUMNS.has(key)) continue;
+    if (allowlist && !allowlist.has(key)) continue;
+    sanitized[key] = value;
+  }
+
+  return sanitized;
+}
+
 async function setSingle(table, id, data) {
-  const d = objToSnake(data);
-  const cols = Object.keys(d).filter(k => k !== 'id' && d[k] !== undefined);
+  const sanitized = sanitizeSingleRowPayload(table, data);
+  const cols = Object.keys(sanitized);
   if (cols.length === 0) return getSingle(table, id);
   const set = cols.map(c => `${c} = ?`).join(', ');
   const vals = cols.map(c => {
-    const v = d[c];
+    const v = sanitized[c];
     if (typeof v === 'object' && v !== null && !(v instanceof Date)) return JSON.stringify(v);
     return v;
   });

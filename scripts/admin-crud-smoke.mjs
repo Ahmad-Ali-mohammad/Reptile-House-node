@@ -4,13 +4,20 @@ const API_BASE = (
   'http://127.0.0.1:3001/api'
 ).replace(/\/+$/, '');
 const API_ROOT = API_BASE.replace(/\/api$/, '');
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'owner@reptilehouse.sy';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Owner@12345';
-const BOOTSTRAP_ADMIN_SECRET = process.env.BOOTSTRAP_ADMIN_SECRET || 'bootstrap_admin_2026';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const BOOTSTRAP_ADMIN_SECRET = process.env.BOOTSTRAP_ADMIN_SECRET;
 const CANONICAL_BASE_URL = process.env.CANONICAL_BASE_URL || 'https://example.com';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function requireEnv(name, value) {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
 }
 
 async function request(path, { method = 'GET', body, token, expected = [200] } = {}) {
@@ -43,6 +50,8 @@ async function request(path, { method = 'GET', body, token, expected = [200] } =
 }
 
 async function run() {
+  requireEnv('ADMIN_EMAIL', ADMIN_EMAIL);
+  requireEnv('ADMIN_PASSWORD', ADMIN_PASSWORD);
   const runId = Date.now();
   const ar = 'اختبار عربي';
   const results = [];
@@ -74,11 +83,13 @@ async function run() {
     try {
       login = await tryLogin();
     } catch {
-      await request('/auth/bootstrap-admin', {
-        method: 'POST',
-        body: { name: 'Owner', email: ADMIN_EMAIL, password: ADMIN_PASSWORD, secret: BOOTSTRAP_ADMIN_SECRET },
-        expected: [200, 201, 409],
-      }).catch(() => null);
+      if (BOOTSTRAP_ADMIN_SECRET) {
+        await request('/auth/bootstrap-admin', {
+          method: 'POST',
+          body: { name: 'Owner', email: ADMIN_EMAIL, password: ADMIN_PASSWORD, secret: BOOTSTRAP_ADMIN_SECRET },
+          expected: [200, 201, 409],
+        }).catch(() => null);
+      }
       login = await tryLogin();
     }
 

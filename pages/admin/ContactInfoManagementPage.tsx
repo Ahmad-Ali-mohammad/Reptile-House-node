@@ -7,36 +7,89 @@ import HelpButton from '../../components/HelpButton';
 import HelpModal from '../../components/HelpModal';
 import { helpContent } from '../../constants/helpContent';
 
+const emptyContactInfo: ContactInfo = {
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    country: '',
+    workingHours: '',
+    socialMedia: {}
+};
+
+const normalizeSocialMedia = (value: unknown): ContactInfo['socialMedia'] => {
+    if (!value) {
+        return {};
+    }
+
+    let source = value;
+    if (typeof value === 'string') {
+        try {
+            source = JSON.parse(value);
+        } catch {
+            return {};
+        }
+    }
+
+    if (!source || typeof source !== 'object') {
+        return {};
+    }
+
+    const socialMedia = source as Record<string, unknown>;
+    return {
+        facebook: typeof socialMedia.facebook === 'string' ? socialMedia.facebook : '',
+        instagram: typeof socialMedia.instagram === 'string' ? socialMedia.instagram : '',
+        whatsapp: typeof socialMedia.whatsapp === 'string' ? socialMedia.whatsapp : '',
+        telegram: typeof socialMedia.telegram === 'string' ? socialMedia.telegram : ''
+    };
+};
+
+const normalizeContactInfo = (value?: Partial<ContactInfo> | null): ContactInfo => ({
+    phone: typeof value?.phone === 'string' ? value.phone : '',
+    email: typeof value?.email === 'string' ? value.email : '',
+    address: typeof value?.address === 'string' ? value.address : '',
+    city: typeof value?.city === 'string' ? value.city : '',
+    country: typeof value?.country === 'string' ? value.country : '',
+    workingHours: typeof value?.workingHours === 'string' ? value.workingHours : '',
+    socialMedia: normalizeSocialMedia(value?.socialMedia)
+});
+
 const ContactInfoManagementPage: React.FC = () => {
-    const [contactInfo, setContactInfo] = useState<ContactInfo>({ phone: '', email: '', address: '', city: '', country: '', workingHours: '', socialMedia: {} });
+    const [contactInfo, setContactInfo] = useState<ContactInfo>(emptyContactInfo);
     const [isEditing, setIsEditing] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
-    const [editedInfo, setEditedInfo] = useState<ContactInfo>(contactInfo);
+    const [editedInfo, setEditedInfo] = useState<ContactInfo>(emptyContactInfo);
     const [isSaving, setIsSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
     useEffect(() => {
         api.getContactInfo().then((info) => {
-            setContactInfo(info);
-            setEditedInfo(info);
+            const normalizedInfo = normalizeContactInfo(info);
+            setContactInfo(normalizedInfo);
+            setEditedInfo(normalizedInfo);
         }).catch(() => {});
     }, []);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!editedInfo.phone || !editedInfo.email) {
             alert('يرجى ملء الحقول المطلوبة (الهاتف والبريد الإلكتروني)');
             return;
         }
 
         setIsSaving(true);
-        setTimeout(() => {
-            api.saveContactInfo(editedInfo).catch(() => {});
-            setContactInfo(editedInfo);
+        try {
+            const payload = normalizeContactInfo(editedInfo);
+            const savedInfo = normalizeContactInfo(await api.saveContactInfo(payload));
+            setContactInfo(savedInfo);
+            setEditedInfo(savedInfo);
             setIsEditing(false);
-            setIsSaving(false);
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 3000);
-        }, 500);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'تعذر حفظ معلومات التواصل. يرجى المحاولة مرة أخرى.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleCancel = () => {
