@@ -1,7 +1,7 @@
 /**
  * API client for backend (MySQL mode only).
  */
-import type { Reptile, Order, Address, User, Article, HeroSlide, Supply, ShamCashConfig, CompanyInfo, ContactInfo, TeamMember, FilterGroup, PageContent, SeoSettings, MediaItem, MediaFolder, UserPreferences, ServiceItem, DatabaseStatus, MediaUploadResult, StoreSettings, ApiKeyRecord, ApiKeySecretResponse, ApiKeyPermission, BackupRecord, BackupSettings, BackupType } from '../types';
+import type { Reptile, Order, Address, User, Article, HeroSlide, Supply, ShamCashConfig, CompanyInfo, ContactInfo, TeamMember, FilterGroup, PageContent, SeoSettings, MediaItem, MediaFolder, UserPreferences, ServiceItem, DatabaseStatus, AdminDashboardOverview, MediaUploadResult, StoreSettings, ApiKeyRecord, ApiKeySecretResponse, ApiKeyPermission, BackupRecord, BackupSettings, BackupType } from '../types';
 
 const configuredBase =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL
@@ -132,6 +132,7 @@ async function download(path: string, options: RequestInit = {}): Promise<{ blob
 
 export const api = {
   isEnabled: () => true,
+  getAdminOverview: (): Promise<AdminDashboardOverview> => request<AdminDashboardOverview>('/api/system/admin-overview'),
   getDatabaseStatus: (options?: { includeDetails?: boolean }): Promise<DatabaseStatus> => {
     const includeDetails = options?.includeDetails ? 'true' : 'false';
     return request<DatabaseStatus>(`/api/system/db-status?includeDetails=${includeDetails}`);

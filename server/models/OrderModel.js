@@ -123,6 +123,51 @@ export async function findAll() {
   return attachItems(list);
 }
 
+export async function findPendingReviewSummary(limit = 10) {
+  await ensureExtendedColumns();
+  const safeLimit = Number.isFinite(limit)
+    ? Math.min(Math.max(Number.parseInt(String(limit), 10), 1), 20)
+    : 10;
+  const pendingReviewStatus = normalizePaymentStatus('review');
+
+  const [countRows] = await pool.query(
+    'SELECT COUNT(*) AS total FROM orders WHERE payment_verification_status = ?',
+    [pendingReviewStatus]
+  );
+  const [rows] = await pool.query(
+    `SELECT
+      id,
+      date,
+      total,
+      paid_amount,
+      customer_name,
+      customer_email,
+      customer_phone,
+      payment_verification_status,
+      created_at
+    FROM orders
+    WHERE payment_verification_status = ?
+    ORDER BY created_at DESC
+    LIMIT ?`,
+    [pendingReviewStatus, safeLimit]
+  );
+
+  return {
+    count: Number(countRows?.[0]?.total || 0),
+    orders: rowsToCamel(rows).map((row) => ({
+      id: row.id,
+      date: row.date,
+      total: Number(row.total || 0),
+      paidAmount: row.paidAmount === null || row.paidAmount === undefined ? undefined : Number(row.paidAmount),
+      customerName: row.customerName || undefined,
+      customerEmail: row.customerEmail || undefined,
+      customerPhone: row.customerPhone || undefined,
+      paymentVerificationStatus: normalizePaymentStatus(row.paymentVerificationStatus),
+      createdAt: row.createdAt,
+    })),
+  };
+}
+
 export async function findByCustomerId(customerId) {
   if (!customerId) return [];
   await ensureExtendedColumns();

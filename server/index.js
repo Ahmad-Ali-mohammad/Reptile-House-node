@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 const defaultRateLimitMax = isProduction ? 100 : 10000;
 const defaultAuthRateLimitMax = isProduction ? 20 : 2000;
+const defaultAdminOverviewRateLimitMax = isProduction ? 120 : 5000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,11 @@ if (trustProxyValue) {
 }
 app.disable('x-powered-by');
 
+const isAdminOverviewPath = (req) => {
+  const originalUrl = String(req.originalUrl || '').split('?')[0];
+  return req.path === '/system/admin-overview' || originalUrl.endsWith('/api/system/admin-overview');
+};
+
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' }
@@ -42,9 +48,17 @@ app.use(helmet({
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: parsePositiveInt(process.env.RATE_LIMIT_MAX, defaultRateLimitMax),
+  skip: isAdminOverviewPath,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', globalLimiter);
+
+const adminOverviewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parsePositiveInt(process.env.ADMIN_OVERVIEW_RATE_LIMIT_MAX, defaultAdminOverviewRateLimitMax),
+  message: 'Too many dashboard refresh requests, please try again in a minute.'
+});
+app.use('/api/system/admin-overview', adminOverviewLimiter);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

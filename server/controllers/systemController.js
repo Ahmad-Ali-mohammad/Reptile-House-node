@@ -1,17 +1,31 @@
 import pool, { isDbConfigured } from '../config/db.js';
+import * as OrderModel from '../models/OrderModel.js';
 
 const DEFAULT_DB_HOST = 'localhost';
 const DEFAULT_DB_PORT = 3306;
 const DEFAULT_DB_NAME = 'semo_reptile_house';
 const DEFAULT_DB_USER = 'root';
+const BASIC_DB_STATUS_CACHE_TTL_MS = 10 * 1000;
+const ADMIN_OVERVIEW_CACHE_TTL_MS = 10 * 1000;
+
+const basicDbStatusCache = {
+  expiresAt: 0,
+  value: null,
+  inFlight: null,
+};
+
+const adminOverviewCache = {
+  expiresAt: 0,
+  value: null,
+  inFlight: null,
+};
 
 const toPort = (value) => {
   const parsed = Number.parseInt(value ?? '', 10);
   return Number.isFinite(parsed) ? parsed : DEFAULT_DB_PORT;
 };
 
-export async function getDatabaseStatus(req, res) {
-  const includeDetails = String(req.query.includeDetails || '').toLowerCase() === 'true';
+async function buildDatabaseStatus(includeDetails = false) {
   const startedAt = Date.now();
   const host = process.env.DB_HOST || DEFAULT_DB_HOST;
   const port = toPort(process.env.DB_PORT);
@@ -107,10 +121,10 @@ export async function getDatabaseStatus(req, res) {
       payload.tableSummary = tableSummary;
     }
 
-    return res.json(payload);
+    return payload;
   } catch (error) {
     const latencyMs = Date.now() - startedAt;
-    return res.json({
+    return {
       ...baseStatus,
       connected: false,
       latencyMs,
@@ -121,6 +135,80 @@ export async function getDatabaseStatus(req, res) {
         sqlState: error?.sqlState || null,
         syscall: error?.syscall || null,
       },
-    });
+    };
   }
+}
+
+async function getCachedBasicDatabaseStatus() {
+  const now = Date.now();
+  if (basicDbStatusCache.value && basicDbStatusCache.expiresAt > now) {
+    return basicDbStatusCache.value;
+  }
+  if (basicDbStatusCache.inFlight) {
+    return basicDbStatusCache.inFlight;
+  }
+
+  basicDbStatusCache.inFlight = buildDatabaseStatus(false)
+    .then((payload) => {
+      basicDbStatusCache.value = payload;
+      basicDbStatusCache.expiresAt = Date.now() + BASIC_DB_STATUS_CACHE_TTL_MS;
+      return payload;
+    })
+    .finally(() => {
+      basicDbStatusCache.inFlight = null;
+    });
+
+  return basicDbStatusCache.inFlight;
+}
+
+async function buildAdminOverview() {
+  const databaseStatusPromise = getCachedBasicDatabaseStatus();
+  const pendingReviewPromise = OrderModel.findPendingReviewSummary(10).catch((error) => {
+    console.error('Failed to load pending review summary:', error);
+    return { count: 0, orders: [] };
+  });
+
+  const [databaseStatus, pendingReview] = await Promise.all([databaseStatusPromise, pendingReviewPromise]);
+
+  return {
+    checkedAt: new Date().toISOString(),
+    databaseStatus,
+    pendingReviewCount: pendingReview.count,
+    pendingOrders: pendingReview.orders,
+  };
+}
+
+async function getCachedAdminOverview() {
+  const now = Date.now();
+  if (adminOverviewCache.value && adminOverviewCache.expiresAt > now) {
+    return adminOverviewCache.value;
+  }
+  if (adminOverviewCache.inFlight) {
+    return adminOverviewCache.inFlight;
+  }
+
+  adminOverviewCache.inFlight = buildAdminOverview()
+    .then((payload) => {
+      adminOverviewCache.value = payload;
+      adminOverviewCache.expiresAt = Date.now() + ADMIN_OVERVIEW_CACHE_TTL_MS;
+      return payload;
+    })
+    .finally(() => {
+      adminOverviewCache.inFlight = null;
+    });
+
+  return adminOverviewCache.inFlight;
+}
+
+export async function getDatabaseStatus(req, res) {
+  const includeDetails = String(req.query.includeDetails || '').toLowerCase() === 'true';
+  const payload = includeDetails
+    ? await buildDatabaseStatus(true)
+    : await getCachedBasicDatabaseStatus();
+  return res.json(payload);
+}
+
+export async function getAdminOverview(req, res) {
+  const payload = await getCachedAdminOverview();
+  return res.json(payload);
 }

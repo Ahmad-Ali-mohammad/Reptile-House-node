@@ -189,6 +189,7 @@ router.get('/backups/:id/download', requireRoles(...manageRoles), backupControll
 router.delete('/backups/:id', requireRoles(...manageRoles), backupController.remove);
 
 // System
+router.get('/system/admin-overview', requireRoles(...manageRoles), systemController.getAdminOverview);
 router.get('/system/db-status', requireRoles(...manageRoles), systemController.getDatabaseStatus);
 
 export default router;

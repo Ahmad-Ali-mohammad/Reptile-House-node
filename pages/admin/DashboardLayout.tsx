@@ -1,5 +1,5 @@
 ﻿
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppMode } from '../../App';
 import Sidebar from './Sidebar';
 import AdminDashboardPage from './AdminDashboardPage';
@@ -32,10 +32,11 @@ import { BellIcon, MenuIcon } from '../../components/icons';
 import { Page } from '../../App';
 import { ApiError, api } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
-import type { DatabaseStatus, Order } from '../../types';
+import type { AdminOrderNotification, DatabaseStatus } from '../../types';
 import { normalizePaymentStatus } from '../../utils/orderWorkflow';
 
 const ADMIN_ORDER_NOTIFICATIONS_STORAGE_KEY = 'semo_admin_seen_order_ids';
+const ADMIN_OVERVIEW_POLL_MS = 60 * 1000;
 
 const readSeenOrderIds = (): string[] => {
     try {
@@ -73,9 +74,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
     const [isDbStatusLoading, setIsDbStatusLoading] = useState(true);
     const [dbStatusError, setDbStatusError] = useState('');
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-    const [orderNotifications, setOrderNotifications] = useState<Order[]>([]);
+    const [orderNotifications, setOrderNotifications] = useState<AdminOrderNotification[]>([]);
     const [pendingReviewCount, setPendingReviewCount] = useState(0);
-    const [notificationsInitialized, setNotificationsInitialized] = useState(false);
+    const notificationsInitializedRef = useRef(false);
+    const [isDocumentVisible, setIsDocumentVisible] = useState(() => (typeof document === 'undefined' ? true : !document.hidden));
     const canManageOrders = user?.role === 'admin' || user?.role === 'manager';
 
     useEffect(() => {
@@ -83,33 +85,41 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialPage]);
 
-    const loadDbStatus = useCallback(async () => {
-        try {
-            const nextStatus = await api.getDatabaseStatus({ includeDetails: false });
-            setDbStatus(nextStatus);
-            setDbStatusError('');
-        } catch (error) {
-            setDbStatus(null);
-            if (error instanceof ApiError) {
-                setDbStatusError(error.message);
-            } else {
-                setDbStatusError('تعذر فحص اتصال قاعدة البيانات.');
-            }
-        } finally {
-            setIsDbStatusLoading(false);
-        }
+    useEffect(() => {
+        if (typeof document === 'undefined') return undefined;
+
+        const syncVisibility = () => {
+            setIsDocumentVisible(!document.hidden);
+        };
+
+        syncVisibility();
+        document.addEventListener('visibilitychange', syncVisibility);
+        window.addEventListener('focus', syncVisibility);
+
+        return () => {
+            document.removeEventListener('visibilitychange', syncVisibility);
+            window.removeEventListener('focus', syncVisibility);
+        };
     }, []);
 
-    const loadOrderNotifications = useCallback(async () => {
+    const loadAdminOverview = useCallback(async () => {
         if (!canManageOrders) {
+            setDbStatus(null);
+            setIsDbStatusLoading(false);
+            setDbStatusError('');
             setOrderNotifications([]);
             setPendingReviewCount(0);
-            setNotificationsInitialized(false);
+            notificationsInitializedRef.current = false;
             return;
         }
 
         try {
-            const orders = (await api.getOrders())
+            const overview = await api.getAdminOverview();
+            setDbStatus(overview.databaseStatus);
+            setDbStatusError('');
+            setPendingReviewCount(overview.pendingReviewCount);
+
+            const pendingOrders = overview.pendingOrders
                 .map((order) => ({
                     ...order,
                     paymentVerificationStatus: normalizePaymentStatus(order.paymentVerificationStatus),
@@ -120,56 +130,44 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                     return rightDate - leftDate;
                 });
 
-            const pendingOrders = orders.filter((order) => order.paymentVerificationStatus === 'قيد المراجعة');
-            setPendingReviewCount(pendingOrders.length);
-
             const seenIds = readSeenOrderIds();
             const seenIdSet = new Set(seenIds);
 
-            if (!notificationsInitialized) {
+            if (!notificationsInitializedRef.current) {
                 setOrderNotifications(pendingOrders.filter((order) => !seenIdSet.has(order.id)).slice(0, 10));
-                setNotificationsInitialized(true);
+                notificationsInitializedRef.current = true;
                 return;
             }
 
             const nextNotifications = pendingOrders.filter((order) => !seenIdSet.has(order.id)).slice(0, 10);
             setOrderNotifications(nextNotifications);
+            notificationsInitializedRef.current = true;
         } catch (error) {
-            console.error('Failed to load admin order notifications:', error);
+            if (error instanceof ApiError) {
+                setDbStatusError(error.message);
+            } else {
+                setDbStatusError('تعذر تحديث حالة النظام.');
+            }
+            console.error('Failed to load admin overview:', error);
+        } finally {
+            setIsDbStatusLoading(false);
         }
-    }, [canManageOrders, notificationsInitialized]);
+    }, [canManageOrders]);
 
     useEffect(() => {
-        let isActive = true;
+        if (!canManageOrders || !isDocumentVisible) {
+            return undefined;
+        }
 
-        const run = async () => {
-            if (!isActive) return;
-            await loadDbStatus();
-        };
+        void loadAdminOverview();
+        const intervalId = window.setInterval(() => {
+            void loadAdminOverview();
+        }, ADMIN_OVERVIEW_POLL_MS);
 
-        run();
-        const intervalId = window.setInterval(run, 30000);
         return () => {
-            isActive = false;
             window.clearInterval(intervalId);
         };
-    }, [loadDbStatus]);
-
-    useEffect(() => {
-        let isActive = true;
-
-        const run = async () => {
-            if (!isActive) return;
-            await loadOrderNotifications();
-        };
-
-        run();
-        const intervalId = window.setInterval(run, 15000);
-        return () => {
-            isActive = false;
-            window.clearInterval(intervalId);
-        };
-    }, [loadOrderNotifications]);
+    }, [canManageOrders, isDocumentVisible, loadAdminOverview]);
 
     const renderContent = () => {
         switch (activePage) {
@@ -249,6 +247,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
     }, [dbStatus?.connected, isDbStatusLoading]);
 
     const handleOpenDbStatus = () => {
+        if (!canManageOrders) return;
         setActivePage('database_status');
         setPage('dashboard/database_status' as Page);
     };
@@ -372,16 +371,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                                 )}
                             </div>
                         )}
-                        <button
-                            type="button"
-                            onClick={handleOpenDbStatus}
-                            title={dbStatusError || 'عرض حالة قاعدة البيانات'}
-                            className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition-colors ${dbStatusBadge.className}`}
-                        >
-                            <span className={`w-2.5 h-2.5 rounded-full ${isDbStatusLoading ? 'bg-amber-300 animate-pulse' : dbStatus?.connected ? 'bg-emerald-300' : 'bg-red-300'}`} />
-                            <span className="hidden sm:inline">{dbStatusBadge.text}</span>
-                            <span className="sm:hidden">قاعدة البيانات</span>
-                        </button>
+                        {canManageOrders && (
+                            <button
+                                type="button"
+                                onClick={handleOpenDbStatus}
+                                title={dbStatusError || 'عرض حالة قاعدة البيانات'}
+                                className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition-colors ${dbStatusBadge.className}`}
+                            >
+                                <span className={`w-2.5 h-2.5 rounded-full ${isDbStatusLoading ? 'bg-amber-300 animate-pulse' : dbStatus?.connected ? 'bg-emerald-300' : 'bg-red-300'}`} />
+                                <span className="hidden sm:inline">{dbStatusBadge.text}</span>
+                                <span className="sm:hidden">قاعدة البيانات</span>
+                            </button>
+                        )}
                         <div className="font-poppins text-xs font-bold text-gray-500 sm:text-sm">{new Date().toLocaleDateString('ar-SY')}</div>
                     </div>
                 </header>

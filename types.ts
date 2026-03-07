@@ -444,3 +444,22 @@ export interface DatabaseStatus {
   }>;
   error?: DatabaseStatusError | null;
 }
+
+export interface AdminOrderNotification {
+  id: string;
+  date: string;
+  total: number;
+  paidAmount?: number;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  paymentVerificationStatus: Order['paymentVerificationStatus'];
+  createdAt?: string;
+}
+
+export interface AdminDashboardOverview {
+  checkedAt: string;
+  databaseStatus: DatabaseStatus;
+  pendingReviewCount: number;
+  pendingOrders: AdminOrderNotification[];
+}
