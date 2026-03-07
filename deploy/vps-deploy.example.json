@@ -10,6 +10,8 @@
   "legacyServiceName": "reptile-api.service",
   "appContainerName": "reptilehouse-app-1",
   "dbContainerName": "reptilehouse-db-1",
+  "staticFrontendDir": "",
+  "staticFrontendOwner": "",
   "pushRemotes": ["node", "origin"],
   "adminEmail": "",
   "adminPassword": "",

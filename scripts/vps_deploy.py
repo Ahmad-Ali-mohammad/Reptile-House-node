@@ -110,6 +110,16 @@ def create_repo_archive(files: list[str]) -> io.BytesIO:
     return archive
 
 
+def create_directory_archive(directory: Path) -> io.BytesIO:
+    archive = io.BytesIO()
+    with tarfile.open(fileobj=archive, mode="w:gz") as tar:
+        for path in directory.rglob("*"):
+            if path.is_file():
+                tar.add(str(path), arcname=str(path.relative_to(directory)).replace("\\", "/"))
+    archive.seek(0)
+    return archive
+
+
 class RemoteSession:
     def __init__(self, cfg: dict):
         self.cfg = cfg
@@ -251,6 +261,18 @@ def resolve_config(args: argparse.Namespace) -> tuple[dict, Path]:
             env="VPS_DB_CONTAINER_NAME",
             default="reptilehouse-db-1",
         ),
+        "static_frontend_dir": lookup(
+            raw,
+            "staticFrontendDir",
+            "static_frontend_dir",
+            env="VPS_STATIC_FRONTEND_DIR",
+        ),
+        "static_frontend_owner": lookup(
+            raw,
+            "staticFrontendOwner",
+            "static_frontend_owner",
+            env="VPS_STATIC_FRONTEND_OWNER",
+        ),
         "push_remotes": split_csv(
             args.push_remote
             if args.push_remote
@@ -325,6 +347,46 @@ def verify_application(remote: RemoteSession, cfg: dict, *, dry_run: bool) -> No
     remote.run(command, timeout=60)
 
 
+def sync_static_frontend(
+    remote: RemoteSession,
+    cfg: dict,
+    commit_short: str,
+    frontend_archive: io.BytesIO,
+) -> str:
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    static_dir = cfg["static_frontend_dir"]
+    backup_path = posixpath.join(
+        cfg["base_dir"], "deploy", "backups", f"frontend-{timestamp}-{commit_short}.tar.gz"
+    )
+    remote.run(
+        f"mkdir -p {shlex.quote(posixpath.dirname(backup_path))} && "
+        f"tar -czf {shlex.quote(backup_path)} -C {shlex.quote(static_dir)} .",
+        timeout=300,
+    )
+    remote.run(
+        f"find {shlex.quote(static_dir)} -mindepth 1 -maxdepth 1 ! -name '.htaccess' -exec rm -rf {{}} +",
+        timeout=120,
+    )
+
+    command = f"mkdir -p {shlex.quote(static_dir)} && tar -xzf - -C {shlex.quote(static_dir)}"
+    if cfg.get("static_frontend_owner"):
+        command += f" && chown -R {shlex.quote(cfg['static_frontend_owner'])} {shlex.quote(static_dir)}"
+
+    emit(f">>> {command}")
+    stdin, stdout, stderr = remote.client.exec_command(command, timeout=1200)
+    stdin.channel.sendall(frontend_archive.getvalue())
+    stdin.channel.shutdown_write()
+    out = stdout.read().decode("utf-8", errors="replace")
+    err = stderr.read().decode("utf-8", errors="replace")
+    code = stdout.channel.recv_exit_status()
+    emit(out)
+    emit(err, stream=sys.stderr)
+    if code != 0:
+        raise RuntimeError(f"Static frontend extraction failed ({code})")
+
+    return backup_path
+
+
 def deploy(args: argparse.Namespace) -> None:
     cfg, config_path = resolve_config(args)
     verify_worktree(allow_dirty=args.allow_dirty, skip_push=args.skip_push)
@@ -341,11 +403,20 @@ def deploy(args: argparse.Namespace) -> None:
     emit(f"Mode: {args.mode}")
     emit(f"Files to sync: {len(tracked_files)}")
     emit(f"Push remotes: {', '.join(cfg['push_remotes']) if cfg['push_remotes'] else 'none'}")
+    emit(f"Static frontend dir: {cfg['static_frontend_dir'] or 'disabled'}")
 
     maybe_push(branch, cfg["push_remotes"], dry_run=args.dry_run or args.skip_push)
 
     archive = create_repo_archive(tracked_files)
     emit(f"Archive size: {len(archive.getbuffer())} bytes")
+
+    frontend_archive = None
+    if cfg["static_frontend_dir"]:
+        emit("Local frontend build: npm run build")
+        if not args.dry_run:
+            run_local(["npm", "run", "build"])
+        frontend_archive = create_directory_archive(ROOT / "dist")
+        emit(f"Frontend archive size: {len(frontend_archive.getbuffer())} bytes")
 
     if args.dry_run:
         emit("Dry run complete. No remote changes were applied.")
@@ -392,8 +463,14 @@ def deploy(args: argparse.Namespace) -> None:
         wait_for_health(remote, cfg["app_container_name"], seconds=240)
         verify_application(remote, cfg, dry_run=False)
 
+        frontend_backup_path = ""
+        if cfg["static_frontend_dir"] and frontend_archive is not None:
+            frontend_backup_path = sync_static_frontend(remote, cfg, commit_short, frontend_archive)
+
         if backup_path:
             emit(f"Backup created: {backup_path}")
+        if frontend_backup_path:
+            emit(f"Frontend backup created: {frontend_backup_path}")
         emit(f"Release marker: {release_marker}")
 
     emit("Deployment completed successfully.")
