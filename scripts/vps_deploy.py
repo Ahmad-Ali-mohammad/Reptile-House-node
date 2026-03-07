@@ -44,7 +44,9 @@ def die(message: str, code: int = 1) -> "NoReturn":
 
 def run_local(command: list[str], *, capture: bool = False) -> str:
     executable = command[0]
-    if os.name == "nt" and shutil.which(executable) is None and shutil.which(f"{executable}.cmd"):
+    if os.name == "nt" and executable.lower() == "npm":
+        command = ["cmd", "/c", *command]
+    elif os.name == "nt" and shutil.which(executable) is None and shutil.which(f"{executable}.cmd"):
         command = [f"{executable}.cmd", *command[1:]]
     result = subprocess.run(
         command,
