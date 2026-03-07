@@ -45,11 +45,11 @@ const Addresses: React.FC = () => {
 
     return (
         <div className="animate-fade-in space-y-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-3xl font-black text-white">عناويني المسجلة</h2>
                 <button 
                     onClick={() => handleOpenModal()}
-                    className="flex items-center bg-amber-500 text-gray-900 font-black py-3 px-6 rounded-2xl hover:bg-amber-400 transition-all shadow-xl active:scale-95"
+                    className="flex w-full items-center justify-center rounded-2xl bg-amber-500 px-6 py-3 font-black text-gray-900 shadow-xl transition-all hover:bg-amber-400 active:scale-95 sm:w-auto"
                 >
                     <PlusIcon className="w-5 h-5 me-2" />
                     إضافة عنوان جديد
@@ -58,8 +58,9 @@ const Addresses: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-4">
                 {addresses.map(address => (
-                    <div key={address.id} className="bg-[#11141b] border border-white/10 rounded-[1.5rem] p-6 flex justify-between items-center group hover:border-amber-500/30 transition-all shadow-lg">
-                        <div className="flex items-center gap-5">
+                    <div key={address.id} className="group rounded-[1.5rem] border border-white/10 bg-[#11141b] p-4 shadow-lg transition-all hover:border-amber-500/30 sm:p-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-4 sm:gap-5">
                             <div className={`p-4 rounded-2xl ${address.isDefault ? 'bg-amber-500 text-gray-900' : 'bg-white/5 text-gray-400'} shadow-inner`}>
                                 <MapPinIcon className="w-6 h-6" />
                             </div>
@@ -81,7 +82,7 @@ const Addresses: React.FC = () => {
                                 )}
                             </div>
                         </div>
-                        <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-3 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                             <button 
                                 onClick={() => handleOpenModal(address)}
                                 className="p-3 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/5"
@@ -96,6 +97,7 @@ const Addresses: React.FC = () => {
                             >
                                 <TrashIcon className="w-5 h-5" />
                             </button>
+                        </div>
                         </div>
                     </div>
                 ))}
@@ -114,7 +116,7 @@ const Addresses: React.FC = () => {
                     <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setIsModalOpen(false)}></div>
                     <form 
                         onSubmit={handleSave}
-                        className="relative w-full max-w-lg glass-dark border border-white/10 rounded-[2.5rem] p-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-scale-in bg-[#0f1117]"
+                        className="relative w-full max-w-lg animate-scale-in rounded-[2.5rem] border border-white/10 bg-[#0f1117] p-5 shadow-[0_0_100px_rgba(0,0,0,0.5)] glass-dark sm:p-10"
                     >
                         <h3 className="text-3xl font-black mb-8 text-white">{editingAddress?.id ? 'تعديل بيانات العنوان' : 'إضافة عنوان شحن جديد'}</h3>
                         <div className="space-y-6">

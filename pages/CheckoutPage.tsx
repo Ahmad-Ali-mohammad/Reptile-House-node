@@ -47,6 +47,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploadingPaymentImage, setIsUploadingPaymentImage] = useState(false);
   const [shamCashConfig, setShamCashConfig] = useState<ShamCashConfig | null>(null);
+  const [copyState, setCopyState] = useState<'idle' | 'done' | 'error'>('idle');
 
   useEffect(() => {
     setShippingForm((current) => {
@@ -63,6 +64,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
   }, []);
 
   useEffect(() => {
+    setCopyState('idle');
+  }, [shamCashConfig?.accountCode]);
+
+  useEffect(() => {
     setPaidAmount(total.toFixed(2));
   }, [total]);
 
@@ -73,6 +78,19 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
 
   const updateField = (field: keyof ShippingForm, value: string) => {
     setShippingForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleCopyAccountCode = async () => {
+    if (!shamCashConfig?.accountCode) return;
+
+    try {
+      await navigator.clipboard.writeText(shamCashConfig.accountCode);
+      setCopyState('done');
+      window.setTimeout(() => setCopyState('idle'), 1500);
+    } catch {
+      setCopyState('error');
+      window.setTimeout(() => setCopyState('idle'), 1500);
+    }
   };
 
   const handlePlaceOrder = async (event: React.FormEvent) => {
@@ -194,12 +212,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <h1 className="mb-12 text-center text-4xl font-black">إتمام الطلب</h1>
+    <div className="mx-auto max-w-6xl pb-20 md:pb-0">
+      <h1 className="mb-10 text-center text-3xl font-black sm:mb-12 sm:text-4xl">إتمام الطلب</h1>
 
       <form onSubmit={handlePlaceOrder} className="flex flex-col gap-8 lg:flex-row-reverse">
         <div className="lg:w-1/3">
-          <div className="sticky top-24 space-y-6 rounded-[2rem] border border-white/10 p-8 shadow-2xl glass-dark">
+          <div className="space-y-6 rounded-[2rem] border border-white/10 p-5 shadow-2xl glass-dark sm:p-8 lg:sticky lg:top-24">
             <h2 className="text-2xl font-black">ملخص طلبك</h2>
             <div className="max-h-[400px] space-y-4 overflow-y-auto pr-2 custom-scrollbar">
               {cart.map((item) => (
@@ -233,7 +251,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
           </div>
         </div>
 
-        <div className="space-y-10 rounded-[2rem] border border-white/10 p-8 shadow-xl glass-medium md:p-12 lg:w-2/3">
+        <div className="space-y-10 rounded-[2rem] border border-white/10 p-5 shadow-xl glass-medium sm:p-8 md:p-10 lg:w-2/3 lg:p-12">
           <section>
             <h2 className="mb-6 flex items-center gap-3 text-2xl font-black">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-sm text-gray-900">1</span>
@@ -322,9 +340,26 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
               )}
 
               {shamCashConfig && (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-center">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center sm:p-5">
                   <p className="mb-2 text-sm text-gray-400">أو أدخل الكود يدويًا</p>
                   <p className="font-poppins text-2xl font-black text-amber-500">{shamCashConfig.accountCode}</p>
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleCopyAccountCode}
+                      disabled={!shamCashConfig.accountCode}
+                      className="inline-flex min-h-10 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-black text-amber-300 transition-colors hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {copyState === 'done' ? 'تم النسخ' : copyState === 'error' ? 'فشل النسخ' : 'نسخ الكود'}
+                    </button>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-amber-500/20 bg-black/30 p-3 text-right sm:p-4">
+                    <div className="max-w-full overflow-x-auto">
+                      <code dir="ltr" className="block whitespace-pre-wrap break-all font-poppins text-sm font-black tracking-[0.14em] text-amber-400 sm:text-base">
+                        {shamCashConfig.accountCode || '---'}
+                      </code>
+                    </div>
+                  </div>
                 </div>
               )}
 

@@ -105,11 +105,11 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
     }
 
     return (
-        <div className="max-w-[1440px] mx-auto px-4 pb-24 md:pb-20">
+        <div className="mx-auto max-w-[1440px] px-3 pb-24 sm:px-4 md:pb-20">
             {/* Header / Intro */}
-            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-right">
+            <div className="mb-12 flex flex-col gap-6 text-right md:mb-16 md:flex-row md:items-start md:justify-between">
                 <div className="animate-slide-up">
-                    <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-none text-white">
+                    <h1 className="text-4xl font-black leading-none tracking-tighter text-white sm:text-5xl md:text-8xl">
                         {safePageContent.title}
                     </h1>
                     {safePageContent.excerpt && (
@@ -123,7 +123,7 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
                     )}
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end animate-fade-in delay-200">
+                <div className="animate-fade-in delay-200 flex w-full flex-wrap items-center gap-3 sm:gap-4 md:w-auto md:justify-end">
                     {/* View Switcher */}
                     <div className="flex items-center gap-2 glass-light p-1.5 rounded-2xl border border-white/10 hidden sm:flex">
                         <button 
@@ -145,7 +145,7 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
                     {/* Filter Button */}
                     <button 
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className="flex items-center gap-3 glass-light border border-white/10 px-6 py-3 rounded-2xl text-white hover:border-amber-500/50 hover:bg-amber-500/5 transition-all shadow-lg hover:shadow-amber-500/20 group relative"
+                        className="group relative flex w-full items-center gap-3 rounded-2xl border border-white/10 px-4 py-3 text-white shadow-lg transition-all hover:border-amber-500/50 hover:bg-amber-500/5 hover:shadow-amber-500/20 sm:w-auto sm:px-6 glass-light"
                     >
                         <FilterIcon className="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" />
                         <span className="font-bold hidden sm:inline">الفلاتر</span>
@@ -161,7 +161,7 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
                             name="suppliesSort"
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            className="glass-light border border-white/10 px-5 py-3 rounded-2xl text-white font-bold appearance-none cursor-pointer hover:border-amber-500/50 hover:bg-amber-500/5 transition-all shadow-lg text-sm pr-12 bg-none"
+                            className="w-full cursor-pointer appearance-none rounded-2xl border border-white/10 bg-none px-4 py-3 pr-12 text-sm font-bold text-white shadow-lg transition-all hover:border-amber-500/50 hover:bg-amber-500/5 sm:w-auto sm:px-5 glass-light"
                             style={{ backgroundImage: 'none' }}
                         >
                             <option value="newest" className="bg-gray-900 text-white">الأحدث</option>

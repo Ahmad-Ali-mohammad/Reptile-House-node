@@ -251,8 +251,8 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
     const otherRecent = recentProducts.filter(r => r.id !== reptile.id);
 
     return (
-        <div className="animate-fade-in max-w-[1280px] mx-auto px-4">
-            <nav className="flex items-center space-x-2 space-x-reverse mb-12 text-sm text-gray-500 font-black">
+        <div className="mx-auto max-w-[1280px] animate-fade-in px-3 pb-20 sm:px-4 md:pb-0">
+            <nav className="mb-8 flex flex-wrap items-center space-x-2 space-x-reverse text-sm font-black text-gray-500 sm:mb-12">
                 <button onClick={() => setPage('home')} className="hover:text-amber-500 transition-colors uppercase">الرئيسية</button>
                 <ChevronRightIcon className="w-4 h-4 rotate-180" />
                 <button onClick={() => setPage('showcase')} className="hover:text-amber-500 transition-colors uppercase">المعرض</button>
@@ -260,17 +260,17 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
                 <span className="text-amber-500 uppercase tracking-widest">{reptile.name}</span>
             </nav>
 
-            <div className="grid lg:grid-cols-2 gap-16 mb-24 items-center">
+            <div className="mb-16 grid items-center gap-8 lg:mb-24 lg:grid-cols-2 lg:gap-16">
                 {/* Image Gallery Section */}
                 <div className="relative group animate-scale-in">
-                    <div className="glass-dark rounded-[4rem] overflow-hidden border border-white/10 aspect-square shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] relative">
+                    <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] glass-dark sm:rounded-[3rem] lg:rounded-[4rem]">
                         <img
                             src={galleryImages[selectedImageIndex]}
                             alt={`${reptile.name} - Image ${selectedImageIndex + 1}`}
                             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                        <div className="absolute top-10 left-10">
+                        <div className="absolute left-4 top-4 sm:left-8 sm:top-8 lg:left-10 lg:top-10">
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -295,7 +295,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
                             <button
                                 key={idx}
                                 onClick={() => setSelectedImageIndex(idx)}
-                                className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${selectedImageIndex === idx ? 'border-amber-500 scale-110' : 'border-white/20 opacity-60 hover:opacity-100'}`}
+                                className={`h-16 w-16 overflow-hidden rounded-2xl border-2 transition-all sm:h-20 sm:w-20 ${selectedImageIndex === idx ? 'scale-110 border-amber-500' : 'border-white/20 opacity-60 hover:opacity-100'}`}
                             >
                                 <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
                             </button>
@@ -317,15 +317,15 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
                             <span className="font-black font-poppins text-xs text-amber-500">{ratingValue.toFixed(1)}</span>
                         </div>
                     </div>
-                    <h1 className="text-6xl md:text-9xl font-black mb-6 leading-none tracking-tighter text-white drop-shadow-2xl">
+                    <h1 className="mb-4 text-4xl font-black leading-none tracking-tighter text-white drop-shadow-2xl sm:mb-6 sm:text-5xl md:text-7xl lg:text-8xl">
                         {reptile.name}
                     </h1>
-                    <p className="text-3xl text-gray-500 font-poppins mb-12 tracking-wide font-black uppercase">{reptile.species}</p>
+                    <p className="mb-8 text-2xl font-black uppercase tracking-wide text-gray-500 font-poppins sm:mb-12 sm:text-3xl">{reptile.species}</p>
 
                     <div className="flex items-center justify-end gap-10 mb-16">
                         <div className="text-right">
                             <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-1">السعر الحالي</p>
-                            <span className="text-7xl font-black text-amber-500 font-poppins drop-shadow-lg">${reptile.price}</span>
+                            <span className="font-poppins text-4xl font-black text-amber-500 drop-shadow-lg sm:text-6xl">${reptile.price}</span>
                         </div>
                     </div>
 
@@ -383,7 +383,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
                         <button
                             onClick={() => addToCart({ ...reptile, quantity })}
                             disabled={reptile.status === 'غير متوفر'}
-                            className={`flex-1 bg-amber-500 text-gray-900 font-black py-6 px-10 rounded-[2.5rem] hover:bg-amber-400 transition-all shadow-[0_20px_50px_-10px_rgba(245,158,11,0.5)] flex items-center justify-center gap-4 text-2xl active:scale-95 disabled:bg-gray-800 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed`}
+                            className={`flex-1 bg-amber-500 text-gray-900 font-black py-4 px-6 sm:py-6 sm:px-10 rounded-2xl sm:rounded-[2.5rem] hover:bg-amber-400 transition-all shadow-[0_20px_50px_-10px_rgba(245,158,11,0.5)] flex items-center justify-center gap-3 sm:gap-4 text-base sm:text-2xl active:scale-95 disabled:bg-gray-800 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed`}
                         >
                             <ShoppingCartIcon className="w-8 h-8" />
                             <span>{reptile.status === 'غير متوفر' ? 'نفذت الكمية' : 'أضف للسلة'}</span>
@@ -391,7 +391,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
 
                         <button
                             onClick={() => setPage('contact')}
-                            className="hidden sm:flex flex-1 glass-light border border-white/10 text-white font-black py-6 px-10 rounded-[2.5rem] hover:bg-white/10 transition-all items-center justify-center gap-3 text-lg"
+                            className="hidden flex-1 items-center justify-center gap-3 rounded-[2.5rem] border border-white/10 py-6 px-10 text-lg font-black text-white transition-all hover:bg-white/10 sm:flex glass-light"
                         >
                             استشارة المربي
                         </button>
@@ -400,7 +400,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
                     {/* Book Consultation Button */}
                     <button
                         onClick={() => setPage('contact')}
-                        className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black py-4 px-8 rounded-2xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-xl flex items-center justify-center gap-3 text-lg active:scale-95"
+                        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4 text-base font-black text-white shadow-xl transition-all hover:from-indigo-600 hover:to-purple-700 active:scale-95 sm:px-8 sm:text-lg"
                     >
                         <PhoneIcon className="w-5 h-5" />
                         احجز استشارة متخصصة
@@ -416,12 +416,12 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId, setP
             </div>
 
             {similarProducts.length > 0 && (
-                <section className="mt-40 border-t border-white/5 pt-20">
-                    <div className="flex justify-between items-end mb-16 text-right flex-row-reverse">
+                <section className="mt-20 border-t border-white/5 pt-12 sm:mt-40 sm:pt-20">
+                    <div className="mb-10 flex flex-col-reverse gap-4 text-right sm:mb-16 sm:flex-row-reverse sm:items-end sm:justify-between">
                         <h2 className="text-4xl font-black tracking-tighter text-white">منتجات مشابهة</h2>
                         <button onClick={() => setPage('showcase')} className="text-amber-500 font-black text-xs uppercase tracking-widest hover:underline">مشاهدة الكل</button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4 md:gap-8">
                         {similarProducts.map((product, idx) => (
                             <div key={product.id} className="scale-95 opacity-80 hover:scale-100 hover:opacity-100 transition-all duration-500">
                                 <ReptileCard reptile={product} setPage={setPage} index={idx} />

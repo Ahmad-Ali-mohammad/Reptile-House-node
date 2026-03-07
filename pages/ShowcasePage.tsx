@@ -98,11 +98,11 @@ const ShowcasePage: React.FC<ShowcasePageProps> = ({ setPage }) => {
     }
 
     return (
-        <div className="max-w-[1440px] mx-auto px-4 pb-24 md:pb-20">
+        <div className="mx-auto max-w-[1440px] px-3 pb-24 sm:px-4 md:pb-20">
             {/* Header / Intro */}
-            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-right">
+            <div className="mb-12 flex flex-col gap-6 text-right md:mb-16 md:flex-row md:items-start md:justify-between">
                 <div className="animate-slide-up">
-                    <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-none text-white">
+                    <h1 className="text-4xl font-black leading-none tracking-tighter text-white sm:text-5xl md:text-8xl">
                         {pageContent.title || 'المعرض'}
                     </h1>
                     {pageContent.excerpt && (
@@ -116,7 +116,7 @@ const ShowcasePage: React.FC<ShowcasePageProps> = ({ setPage }) => {
                     )}
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end animate-fade-in delay-200">
+                <div className="animate-fade-in delay-200 flex w-full flex-wrap items-center gap-3 sm:gap-4 md:w-auto md:justify-end">
                     {/* View Switcher */}
                     <div className="flex items-center gap-2 glass-light p-1.5 rounded-2xl border border-white/10 hidden sm:flex">
                         <button 
@@ -137,7 +137,7 @@ const ShowcasePage: React.FC<ShowcasePageProps> = ({ setPage }) => {
 
                     {/* Sort Dropdown */}
                     <div className="relative">
-                         <div className="glass-light border border-white/10 rounded-2xl py-3.5 px-6 flex items-center gap-4 cursor-pointer hover:border-amber-500/50 transition-all min-w-[200px] shadow-lg">
+                         <div className="glass-light flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-white/10 px-4 py-3.5 shadow-lg transition-all hover:border-amber-500/50 sm:min-w-[200px] sm:px-6">
                             <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">ترتيب حسب:</span>
                             <select 
                                 id="showcase-sort"
@@ -220,7 +220,7 @@ const ShowcasePage: React.FC<ShowcasePageProps> = ({ setPage }) => {
 
                 {/* Products Main Grid */}
                 <main className="flex-1 min-h-[600px]">
-                    <div className="flex items-center justify-between mb-10 text-right">
+                    <div className="mb-8 flex flex-wrap items-center justify-between gap-3 text-right sm:mb-10">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2 bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20">
                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>

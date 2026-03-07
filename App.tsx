@@ -181,7 +181,7 @@ const AppContent: React.FC = () => {
   );
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col pb-20 md:pb-0 relative">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-gray-900 pb-[5.25rem] text-white md:pb-0">
       <div className="absolute inset-0 bg-cover bg-center bg-fixed opacity-40 -z-10" style={{ backgroundImage: "url('/assets/photo_2026-02-04_07-13-35.jpg')", filter: 'blur(10px) brightness(0.3)' }} />
 
       {appMode === 'dashboard' ? (
@@ -191,13 +191,13 @@ const AppContent: React.FC = () => {
       ) : (
         <>
           <Header setPage={setPage as any} setAppMode={setAppMode} />
-          <main className="container mx-auto px-4 py-8 flex-grow relative z-10">
+          <main className="container relative z-10 mx-auto flex-grow px-3 py-5 sm:px-4 sm:py-8 md:px-6 md:py-10">
             <Suspense fallback={loadingFallback}>
               {renderPage()}
             </Suspense>
           </main>
           <Footer setPage={setPage as any} />
-          <QuickCart setPage={setPage as any} />
+          <QuickCart setPage={setPage as any} currentPage={currentPage} />
           <BottomNavigation currentPage={currentPage} setPage={setPage} user={user} />
         </>
       )}

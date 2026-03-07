@@ -18,21 +18,21 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, setPage }) => {
     <div className="bg-white/10 backdrop-filter backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg p-6 transition-all duration-300">
       <button
         type="button"
-        className="w-full flex flex-col md:flex-row justify-between items-center gap-4 text-right"
+        className="flex w-full flex-col items-stretch gap-4 text-right md:flex-row md:items-center md:justify-between"
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        <div className="flex-1 text-center md:text-right">
+        <div className="min-w-0 flex-1 text-center md:text-right">
           <p className="font-bold text-lg">طلب #{order.id}</p>
           <p className="text-sm text-gray-300">{order.date} • {getCustomerDisplayName(order)}</p>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           <span className={`px-3 py-1 text-sm font-bold rounded-full border ${getOrderStatusClasses(status)}`}>{status}</span>
           <span className={`px-3 py-1 text-sm font-bold rounded-full border inline-flex items-center gap-2 ${getPaymentStatusClasses(paymentStatus)}`}>
             <span>{getPaymentStatusIcon(paymentStatus)}</span>
             {paymentStatus}
           </span>
         </div>
-        <div className="flex-1 text-center md:text-left font-bold text-lg font-poppins">${order.total.toFixed(2)}</div>
+        <div className="flex-1 text-center text-lg font-bold font-poppins md:text-left">${order.total.toFixed(2)}</div>
         <div className="ps-4">
           <ChevronDownIcon className={`w-6 h-6 text-gray-300 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
@@ -40,7 +40,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, setPage }) => {
 
       {isOpen && (
         <div className="mt-6 pt-6 border-t border-white/20 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
             <div className="bg-black/20 rounded-xl p-4 text-gray-300">
               <p className="text-gray-500 mb-2">بيانات الشحن</p>
               <p className="leading-relaxed">{getShippingSummary(order)}</p>
@@ -58,8 +58,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, setPage }) => {
 
           <div className="space-y-4">
             {order.items.map((item) => (
-              <div key={`${item.reptileId}-${item.name}`} className="flex items-center space-x-4 space-x-reverse">
-                <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
+              <div key={`${item.reptileId}-${item.name}`} className="flex items-center gap-3 sm:gap-4">
+                <img src={item.imageUrl} alt={item.name} className="h-14 w-14 rounded-lg object-cover sm:h-16 sm:w-16" />
                 <div className="flex-1">
                   <p className="font-bold">{item.name}</p>
                   <p className="text-sm text-gray-400">الكمية: {item.quantity}</p>
@@ -69,7 +69,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, setPage }) => {
             ))}
           </div>
 
-          <div className="text-left mt-4">
+          <div className="mt-4 text-left">
             <button
               onClick={(e) => {
                 e.stopPropagation();

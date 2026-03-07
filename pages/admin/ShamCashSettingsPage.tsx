@@ -171,7 +171,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                             onChange={handleAccountCodeChange}
                             placeholder="000000000000"
                             dir="ltr"
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-left font-poppins text-base tracking-[0.18em] text-white transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 sm:px-5 sm:text-lg"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-left font-poppins text-base tracking-[0.08em] text-white transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 sm:px-5 sm:text-lg sm:tracking-[0.18em]"
                         />
 
                         {config.accountCode && (

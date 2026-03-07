@@ -44,27 +44,27 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ setPage }) => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8">إعدادات الحساب</h1>
-        <div className="flex flex-col md:flex-row gap-8">
+    <div className="mx-auto max-w-5xl pb-20 md:pb-0">
+        <h1 className="mb-6 text-center text-3xl font-bold sm:mb-8 sm:text-4xl">إعدادات الحساب</h1>
+        <div className="flex flex-col gap-5 md:flex-row md:gap-8">
             <aside className="md:w-1/4">
-                <div className="bg-white/5 backdrop-filter backdrop-blur-lg border border-white/20 rounded-2xl p-4 sticky top-24">
-                   <nav className="flex flex-row md:flex-col gap-2">
+                <div className="sticky top-24 rounded-2xl border border-white/20 bg-white/5 p-3 backdrop-blur-lg sm:p-4">
+                   <nav className="flex flex-wrap gap-2 md:flex-col">
                        {tabs.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center w-full text-right p-3 rounded-lg transition-colors ${activeTab === tab.id ? 'bg-amber-500/30 text-amber-300' : 'hover:bg-white/10'}`}
+                                className={`flex min-w-0 items-center text-right p-3 rounded-lg transition-colors md:w-full ${activeTab === tab.id ? 'bg-amber-500/30 text-amber-300' : 'hover:bg-white/10'}`}
                             >
                                 {tab.icon}
-                                <span className="font-bold">{tab.name}</span>
+                                <span className="truncate text-sm font-bold sm:text-base">{tab.name}</span>
                             </button>
                        ))}
                    </nav>
                 </div>
             </aside>
             <main className="md:w-3/4">
-                <div className="bg-white/5 backdrop-filter backdrop-blur-lg border border-white/20 rounded-2xl p-8 min-h-[400px]">
+                <div className="min-h-[400px] rounded-2xl border border-white/20 bg-white/5 p-4 backdrop-blur-lg sm:p-8">
                     {renderTabContent()}
                 </div>
             </main>

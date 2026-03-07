@@ -70,12 +70,12 @@ const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
       )}
 
       <section className="mb-16">
-        <div className="flex items-end justify-between gap-4 mb-10">
+        <div className="mb-10 flex flex-col gap-4 text-right sm:flex-row sm:items-end sm:justify-between">
           <div className="text-right">
             <h2 className="text-3xl sm:text-4xl font-black">الأكثر مبيعاً</h2>
             <p className="text-gray-400 font-bold mt-2">اختيارات العملاء</p>
           </div>
-          <button onClick={() => setPage('showcase')} className="shrink-0 bg-white/5 border border-white/10 hover:border-amber-500/50 text-gray-200 hover:text-white px-6 py-3 rounded-2xl font-black text-sm transition-all active:scale-95">
+          <button onClick={() => setPage('showcase')} className="w-full shrink-0 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-black text-gray-200 transition-all hover:border-amber-500/50 hover:text-white active:scale-95 sm:w-auto">
             عرض الكل
           </button>
         </div>
@@ -87,12 +87,12 @@ const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
       </section>
 
       <section className="mb-16">
-        <div className="flex items-end justify-between gap-4 mb-10">
+        <div className="mb-10 flex flex-col gap-4 text-right sm:flex-row sm:items-end sm:justify-between">
           <div className="text-right">
             <h2 className="text-3xl sm:text-4xl font-black">وصل حديثاً</h2>
             <p className="text-gray-400 font-bold mt-2">New Scales, New Tails</p>
           </div>
-          <button onClick={() => setPage('showcase')} className="shrink-0 bg-amber-500 text-gray-900 hover:bg-amber-400 px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-xl shadow-amber-500/10 active:scale-95">
+          <button onClick={() => setPage('showcase')} className="w-full shrink-0 rounded-2xl bg-amber-500 px-6 py-3 text-sm font-black text-gray-900 shadow-xl shadow-amber-500/10 transition-all hover:bg-amber-400 active:scale-95 sm:w-auto">
             اكتشف الجديد
           </button>
         </div>
@@ -104,12 +104,12 @@ const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
       </section>
 
       <section className="mb-16">
-        <div className="flex items-end justify-between gap-4 mb-10">
+        <div className="mb-10 flex flex-col gap-4 text-right sm:flex-row sm:items-end sm:justify-between">
           <div className="text-right">
             <h2 className="text-3xl sm:text-4xl font-black">أدلة العناية</h2>
             <p className="text-gray-400 font-bold mt-2">Care Sheets</p>
           </div>
-          <button onClick={() => setPage('blog')} className="shrink-0 bg-white/5 border border-white/10 hover:border-amber-500/50 text-gray-200 hover:text-white px-6 py-3 rounded-2xl font-black text-sm transition-all active:scale-95">
+          <button onClick={() => setPage('blog')} className="w-full shrink-0 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-black text-gray-200 transition-all hover:border-amber-500/50 hover:text-white active:scale-95 sm:w-auto">
             كل المقالات
           </button>
         </div>
