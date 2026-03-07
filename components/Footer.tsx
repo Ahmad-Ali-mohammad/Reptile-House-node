@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Page } from '../App';
 import { ContactInfo } from '../types';
 import { api } from '../services/api';
@@ -7,6 +7,27 @@ interface FooterProps {
   setPage: (page: Page) => void;
 }
 
+const QUICK_LINKS: Array<{ label: string; page: Page }> = [
+  { label: 'الرئيسية', page: 'home' },
+  { label: 'معرض الزواحف', page: 'showcase' },
+  { label: 'المستلزمات', page: 'supplies' },
+  { label: 'المدونة التعليمية', page: 'blog' },
+  { label: 'من نحن', page: 'about' },
+  { label: 'اتصل بنا', page: 'contact' },
+  { label: 'العروض والباقات', page: 'offers' },
+];
+
+const POLICY_LINKS: Array<{ label: string; page: Page }> = [
+  { label: 'سياسة الشحن والتوصيل', page: 'shippingPolicy' },
+  { label: 'سياسة الإرجاع', page: 'returnPolicy' },
+  { label: 'الضمان والصحة', page: 'warranty' },
+  { label: 'سياسة الخصوصية', page: 'privacy' },
+  { label: 'الشروط والأحكام', page: 'terms' },
+];
+
+const DEVELOPER_INSTAGRAM_URL =
+  'https://www.instagram.com/ahmad_el_mohammad?igsh=a21pdXRnbWF5eTMy&utm_source=qr';
+
 const Footer: React.FC<FooterProps> = ({ setPage }) => {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
 
@@ -14,79 +35,83 @@ const Footer: React.FC<FooterProps> = ({ setPage }) => {
     api.getContactInfo().then(setContactInfo).catch(() => setContactInfo(null));
   }, []);
 
-  const handleNav = (e: React.MouseEvent, page: Page) => {
-    e.preventDefault();
+  const handleNav = (event: React.MouseEvent, page: Page) => {
+    event.preventDefault();
     setPage(page);
   };
 
   return (
-    <footer className="bg-black/30 backdrop-filter backdrop-blur-lg border-t border-white/10 mt-16 relative z-10">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-right">
-          {/* Brand Identity */}
-          <div className="space-y-4">
-            <h3 className="text-2xl font-black text-amber-400 font-cairo tracking-tighter">Reptile House</h3>
-            <p className="text-gray-400 leading-relaxed text-sm">
-              بإدارة سيمون. متجرك الأول للزواحف الفريدة في دمشق. نقدم جودة ورعاية لا مثيل لهما لجميع عشاق هذه المخلوقات المذهلة.
+    <footer className="relative mt-20 overflow-hidden border-t border-white/10 bg-gradient-to-b from-black/20 via-black/50 to-black/85 backdrop-blur-xl">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-24 top-8 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="absolute -left-24 bottom-8 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl" />
+      </div>
+
+      <div className="container relative z-10 mx-auto px-4 py-14 sm:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-12">
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl lg:col-span-4">
+            <h3 className="text-2xl font-black tracking-tight text-amber-400">Reptile House</h3>
+            <p className="mt-4 text-sm leading-relaxed text-gray-300">
+              بإدارة سيمون. متجرك الأول للزواحف الفريدة في دمشق. نقدم جودة ورعاية لا مثيل لهما لجميع عشاق هذه
+              المخلوقات المذهلة.
             </p>
             {contactInfo?.phone && (
-              <div className="flex items-center gap-3 text-gray-400 hover:text-amber-400 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <a href={`tel:${contactInfo.phone.replace(/\s/g, '')}`} className="text-sm font-bold font-poppins" dir="ltr">
-                  {contactInfo.phone}
-                </a>
-              </div>
+              <a
+                href={`tel:${contactInfo.phone.replace(/\s/g, '')}`}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm font-bold text-amber-300 transition-colors hover:bg-amber-500/20"
+                dir="ltr"
+              >
+                {contactInfo.phone}
+              </a>
             )}
-          </div>
+          </section>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-bold text-lg mb-6 text-white border-b border-amber-500/20 pb-2 w-fit">روابط سريعة</h4>
-            <ul className="space-y-3">
-              <li><a href="#" onClick={(e) => handleNav(e, 'home')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> الرئيسية</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'showcase')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> معرض الزواحف</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'supplies')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> المستلزمات</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'blog')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> المدونة التعليمية</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'about')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> من نحن</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'contact')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> اتصل بنا</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'offers')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> العروض والباقات</a></li>
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl lg:col-span-2">
+            <h4 className="mb-4 text-lg font-black text-white">روابط سريعة</h4>
+            <ul className="space-y-2.5 text-sm">
+              {QUICK_LINKS.map((link) => (
+                <li key={link.page}>
+                  <a
+                    href="#"
+                    onClick={(event) => handleNav(event, link.page)}
+                    className="text-gray-300 transition-colors hover:text-amber-300"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
-          </div>
+          </section>
 
-          {/* Legal & Policies */}
-          <div>
-            <h4 className="font-bold text-lg mb-6 text-white border-b border-amber-500/20 pb-2 w-fit">السياسات والضمان</h4>
-            <ul className="space-y-3">
-              <li><a href="#" onClick={(e) => handleNav(e, 'shippingPolicy')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> سياسة الشحن والتوصيل</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'returnPolicy')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> سياسة الإرجاع</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'warranty')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> الضمان والصحة</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'privacy')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> سياسة الخصوصية</a></li>
-              <li><a href="#" onClick={(e) => handleNav(e, 'terms')} className="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 text-sm font-bold"><span>•</span> الشروط والأحكام</a></li>
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl lg:col-span-3">
+            <h4 className="mb-4 text-lg font-black text-white">السياسات والضمان</h4>
+            <ul className="space-y-2.5 text-sm">
+              {POLICY_LINKS.map((link) => (
+                <li key={link.page}>
+                  <a
+                    href="#"
+                    onClick={(event) => handleNav(event, link.page)}
+                    className="text-gray-300 transition-colors hover:text-amber-300"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
-          </div>
+          </section>
 
-          {/* Social Media Links */}
-          <div>
-            <h4 className="font-bold text-lg mb-6 text-white border-b border-amber-500/20 pb-2 w-fit">تواصل معنا</h4>
-            <div className="space-y-4">
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl lg:col-span-3">
+            <h4 className="mb-4 text-lg font-black text-white">تواصل معنا</h4>
+            <div className="space-y-3">
               {contactInfo?.socialMedia?.facebook && (
                 <a
                   href={contactInfo.socialMedia.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-3 bg-white/5 hover:bg-blue-500/10 border border-white/10 hover:border-blue-500/30 rounded-xl transition-all group"
+                  className="flex items-center justify-between rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 transition-colors hover:bg-blue-500/15"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-500/10 group-hover:bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-bold">فيسبوك</p>
-                    <p className="text-sm text-white font-bold truncate">Reptile House</p>
-                  </div>
+                  <span className="text-sm font-bold text-white">فيسبوك</span>
+                  <span className="text-xs text-gray-300">Reptile House</span>
                 </a>
               )}
 
@@ -95,17 +120,10 @@ const Footer: React.FC<FooterProps> = ({ setPage }) => {
                   href={contactInfo.socialMedia.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-3 bg-white/5 hover:bg-pink-500/10 border border-white/10 hover:border-pink-500/30 rounded-xl transition-all group"
+                  className="flex items-center justify-between rounded-xl border border-pink-500/20 bg-pink-500/10 px-4 py-3 transition-colors hover:bg-pink-500/15"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-pink-500/10 group-hover:bg-pink-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.024.048-1.378.06-3.808.06s-2.784-.012-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.345 2.525c.636-.247 1.363-.416 2.427-.465C9.795 2.013 10.148 2 12.315 2zm-1.002 8a3.315 3.315 0 100 6.63 3.315 3.315 0 000-6.63zm5.49-3.75a1.238 1.238 0 100 2.475 1.238 1.238 0 000-2.475z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-bold">إنستغرام</p>
-                    <p className="text-sm text-white font-bold truncate">@reptile_hou</p>
-                  </div>
+                  <span className="text-sm font-bold text-white">إنستغرام</span>
+                  <span className="text-xs text-gray-300">@reptile_hou</span>
                 </a>
               )}
 
@@ -114,17 +132,12 @@ const Footer: React.FC<FooterProps> = ({ setPage }) => {
                   href={`https://wa.me/${contactInfo.socialMedia.whatsapp.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-3 bg-white/5 hover:bg-green-500/10 border border-white/10 hover:border-green-500/30 rounded-xl transition-all group"
+                  className="flex items-center justify-between rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 transition-colors hover:bg-green-500/15"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-green-500/10 group-hover:bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-bold">واتساب</p>
-                    <p className="text-sm text-white font-bold font-poppins truncate" dir="ltr">{contactInfo.socialMedia.whatsapp}</p>
-                  </div>
+                  <span className="text-sm font-bold text-white">واتساب</span>
+                  <span className="text-xs text-gray-300 font-poppins" dir="ltr">
+                    {contactInfo.socialMedia.whatsapp}
+                  </span>
                 </a>
               )}
 
@@ -133,26 +146,43 @@ const Footer: React.FC<FooterProps> = ({ setPage }) => {
                   href={contactInfo.socialMedia.telegram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-3 bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 rounded-xl transition-all group"
+                  className="flex items-center justify-between rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 transition-colors hover:bg-cyan-500/15"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-cyan-500/10 group-hover:bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-bold">تيليجرام</p>
-                    <p className="text-sm text-white font-bold truncate">Reptile House</p>
-                  </div>
+                  <span className="text-sm font-bold text-white">تيليجرام</span>
+                  <span className="text-xs text-gray-300">Reptile House</span>
                 </a>
               )}
             </div>
-          </div>
+          </section>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-white/5 text-center">
-          <p className="text-gray-600 text-sm font-bold pb-4">
+        <div className="mt-8 grid gap-6 lg:grid-cols-5">
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl lg:col-span-3">
+            <h4 className="text-lg font-black text-white">رسالة المتجر</h4>
+            <p className="mt-3 text-sm leading-relaxed text-gray-300">
+              نعمل على تقديم تجربة احترافية، واضحة، وسريعة في عرض المنتجات وإدارة الطلبات، مع تحسين مستمر للجودة
+              والتفاصيل التي تهم العميل.
+            </p>
+          </section>
+
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl lg:col-span-2">
+            <h4 className="text-lg font-black text-white">تواصل مع مطوّر المتجر</h4>
+            <p className="mt-3 text-sm leading-relaxed text-gray-300">
+              لأي تطويرات تقنية، تحسينات تجربة المستخدم، أو توسعة وظائف المتجر يمكنك التواصل مباشرة عبر إنستغرام.
+            </p>
+            <a
+              href={DEVELOPER_INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-dev-cta mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black text-white"
+            >
+              تواصل مع مطوّر المتجر على إنستغرام
+            </a>
+          </section>
+        </div>
+
+        <div className="mt-10 border-t border-white/10 pt-6 text-center">
+          <p className="text-sm text-gray-400">
             &copy; {new Date().getFullYear()} Reptile House Damascus. جميع الحقوق محفوظة.
           </p>
         </div>
