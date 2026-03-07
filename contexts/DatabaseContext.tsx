@@ -21,7 +21,7 @@ interface DatabaseContextType {
   createOrder: (order: Order) => Promise<Order | null>;
   updateOrder: (id: string, status: Order['status']) => void;
   deleteOrder: (id: string) => void;
-  updateOrderPaymentStatus: (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, nextStatus?: Order['status']) => void;
+  updateOrderPaymentStatus: (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, nextStatus?: Order['status'], paidAmount?: number) => void;
   addArticle: (article: Article) => void;
   deleteArticle: (id: number) => void;
   saveHeroSlide: (slide: HeroSlide) => void;
@@ -155,8 +155,8 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     api.deleteOrder(id).then(() => refreshData()).catch(console.error);
   };
 
-  const updateOrderPaymentStatus = (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, nextStatus?: Order['status']) => {
-    api.updateOrderPaymentStatus(orderId, paymentStatus, rejectionReason, nextStatus).then(() => refreshData()).catch(console.error);
+  const updateOrderPaymentStatus = (orderId: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, nextStatus?: Order['status'], paidAmount?: number) => {
+    api.updateOrderPaymentStatus(orderId, paymentStatus, rejectionReason, nextStatus, paidAmount).then(() => refreshData()).catch(console.error);
   };
 
   const updateUser = (user: User) => {

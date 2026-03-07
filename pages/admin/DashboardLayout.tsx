@@ -28,10 +28,34 @@ import ContactInfoManagementPage from './ContactInfoManagementPage';
 import PageContentManagementPage from './PageContentManagementPage';
 import SeoManagementPage from './SeoManagementPage';
 import DatabaseStatusPage from './DatabaseStatusPage';
-import { MenuIcon } from '../../components/icons';
+import { BellIcon, MenuIcon } from '../../components/icons';
 import { Page } from '../../App';
 import { ApiError, api } from '../../services/api';
-import type { DatabaseStatus } from '../../types';
+import { useAuth } from '../../hooks/useAuth';
+import type { DatabaseStatus, Order } from '../../types';
+import { normalizePaymentStatus } from '../../utils/orderWorkflow';
+
+const ADMIN_ORDER_NOTIFICATIONS_STORAGE_KEY = 'semo_admin_seen_order_ids';
+
+const readSeenOrderIds = (): string[] => {
+    try {
+        const raw = globalThis.localStorage.getItem(ADMIN_ORDER_NOTIFICATIONS_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.map((value) => String(value)) : [];
+    } catch {
+        return [];
+    }
+};
+
+const writeSeenOrderIds = (ids: string[]) => {
+    try {
+        const uniqueIds = Array.from(new Set(ids.map((value) => String(value))));
+        globalThis.localStorage.setItem(ADMIN_ORDER_NOTIFICATIONS_STORAGE_KEY, JSON.stringify(uniqueIds.slice(-250)));
+    } catch {
+        // ignore storage failures
+    }
+};
 
 export type DashboardPage = 'dashboard' | 'analytics' | 'reports' | 'products' | 'supplies_mgmt' | 'services' | 'inventory' | 'orders' | 'shipping' | 'users' | 'customers' | 'media' | 'blog_mgmt' | 'hero_mgmt' | 'offers' | 'policies' | 'filters' | 'company_info' | 'contact_info' | 'page_content' | 'seo' | 'settings' | 'apikeys' | 'backup' | 'shamcash_settings' | 'database_status';
 
@@ -42,11 +66,17 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, initialPage }) => {
+    const { user } = useAuth();
     const [activePage, setActivePage] = useState<DashboardPage>(initialPage || 'dashboard');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null);
     const [isDbStatusLoading, setIsDbStatusLoading] = useState(true);
     const [dbStatusError, setDbStatusError] = useState('');
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [orderNotifications, setOrderNotifications] = useState<Order[]>([]);
+    const [pendingReviewCount, setPendingReviewCount] = useState(0);
+    const [notificationsInitialized, setNotificationsInitialized] = useState(false);
+    const canManageOrders = user?.role === 'admin' || user?.role === 'manager';
 
     useEffect(() => {
         if (initialPage && initialPage !== activePage) setActivePage(initialPage);
@@ -70,6 +100,45 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
         }
     }, []);
 
+    const loadOrderNotifications = useCallback(async () => {
+        if (!canManageOrders) {
+            setOrderNotifications([]);
+            setPendingReviewCount(0);
+            setNotificationsInitialized(false);
+            return;
+        }
+
+        try {
+            const orders = (await api.getOrders())
+                .map((order) => ({
+                    ...order,
+                    paymentVerificationStatus: normalizePaymentStatus(order.paymentVerificationStatus),
+                }))
+                .sort((left, right) => {
+                    const leftDate = new Date(left.createdAt || left.date).getTime();
+                    const rightDate = new Date(right.createdAt || right.date).getTime();
+                    return rightDate - leftDate;
+                });
+
+            const pendingOrders = orders.filter((order) => order.paymentVerificationStatus === 'قيد المراجعة');
+            setPendingReviewCount(pendingOrders.length);
+
+            const seenIds = readSeenOrderIds();
+            const seenIdSet = new Set(seenIds);
+
+            if (!notificationsInitialized) {
+                setOrderNotifications(pendingOrders.filter((order) => !seenIdSet.has(order.id)).slice(0, 10));
+                setNotificationsInitialized(true);
+                return;
+            }
+
+            const nextNotifications = pendingOrders.filter((order) => !seenIdSet.has(order.id)).slice(0, 10);
+            setOrderNotifications(nextNotifications);
+        } catch (error) {
+            console.error('Failed to load admin order notifications:', error);
+        }
+    }, [canManageOrders, notificationsInitialized]);
+
     useEffect(() => {
         let isActive = true;
 
@@ -85,6 +154,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
             window.clearInterval(intervalId);
         };
     }, [loadDbStatus]);
+
+    useEffect(() => {
+        let isActive = true;
+
+        const run = async () => {
+            if (!isActive) return;
+            await loadOrderNotifications();
+        };
+
+        run();
+        const intervalId = window.setInterval(run, 15000);
+        return () => {
+            isActive = false;
+            window.clearInterval(intervalId);
+        };
+    }, [loadOrderNotifications]);
 
     const renderContent = () => {
         switch (activePage) {
@@ -168,6 +253,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
         setPage('dashboard/database_status' as Page);
     };
 
+    const markNotificationsAsRead = useCallback((ids?: string[]) => {
+        const targetIds = ids && ids.length > 0 ? ids : orderNotifications.map((order) => order.id);
+        if (targetIds.length === 0) return;
+
+        const nextSeenIds = [...readSeenOrderIds(), ...targetIds];
+        writeSeenOrderIds(nextSeenIds);
+        setOrderNotifications((current) => current.filter((order) => !targetIds.includes(order.id)));
+    }, [orderNotifications]);
+
+    const handleOpenOrdersPage = useCallback((orderId?: string) => {
+        if (orderId) {
+            markNotificationsAsRead([orderId]);
+        }
+
+        setIsNotificationsOpen(false);
+        setActivePage('orders');
+        setPage('dashboard/orders' as Page);
+    }, [markNotificationsAsRead, setPage]);
+
     return (
         <div className="relative z-50 flex h-screen bg-[#0a0c10] overflow-hidden text-right" dir="rtl">
             {isSidebarOpen && (
@@ -180,7 +284,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
             )}
 
             <div className={`fixed inset-y-0 right-0 z-[70] transform transition-transform duration-500 ease-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                <Sidebar activePage={activePage} setActivePage={(p) => { setActivePage(p); setIsSidebarOpen(false); }} setAppMode={setAppMode} setPage={setPage} />
+                <Sidebar activePage={activePage} setActivePage={(p) => { setActivePage(p); setIsSidebarOpen(false); }} setAppMode={setAppMode} setPage={setPage} ordersBadgeCount={pendingReviewCount} />
             </div>
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
@@ -198,6 +302,72 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        {canManageOrders && (
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsNotificationsOpen((current) => !current)}
+                                    className={`relative inline-flex h-11 w-11 items-center justify-center rounded-xl border transition-colors ${orderNotifications.length > 0 ? 'border-amber-400/30 bg-amber-500/10 text-amber-300' : 'border-white/10 bg-white/5 text-gray-300'}`}
+                                    aria-label="إشعارات الطلبات الجديدة"
+                                >
+                                    <BellIcon className="h-5 w-5" />
+                                    {orderNotifications.length > 0 && (
+                                        <span className="absolute -top-1 -left-1 min-w-[1.5rem] rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-black text-white">
+                                            {orderNotifications.length}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {isNotificationsOpen && (
+                                    <div className="absolute left-0 top-14 z-30 w-96 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#11141b]/95 shadow-2xl backdrop-blur-xl">
+                                        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                                            <div>
+                                                <p className="text-sm font-black text-white">إشعارات الطلبات</p>
+                                                <p className="text-xs text-gray-400">طلبات جديدة بانتظار مراجعة الدفع</p>
+                                            </div>
+                                            {orderNotifications.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => markNotificationsAsRead()}
+                                                    className="text-xs font-bold text-amber-300 transition-colors hover:text-amber-200"
+                                                >
+                                                    تعليم الكل كمقروء
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="max-h-96 overflow-y-auto">
+                                            {orderNotifications.length > 0 ? orderNotifications.map((order) => (
+                                                <button
+                                                    key={order.id}
+                                                    type="button"
+                                                    onClick={() => handleOpenOrdersPage(order.id)}
+                                                    className="flex w-full flex-col gap-2 border-b border-white/5 px-5 py-4 text-right transition-colors hover:bg-white/5"
+                                                >
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <span className="font-poppins text-sm font-black text-white">#{order.id}</span>
+                                                        <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-black text-amber-300">
+                                                            جديد
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-gray-100">{order.customerName || 'عميل المتجر'}</p>
+                                                    <div className="flex items-center justify-between gap-4 text-xs text-gray-400">
+                                                        <span>{order.date}</span>
+                                                        <span className="font-poppins text-emerald-300">
+                                                            ${typeof order.paidAmount === 'number' ? order.paidAmount.toFixed(2) : order.total.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            )) : (
+                                                <div className="px-5 py-8 text-center text-sm font-bold text-gray-500">
+                                                    لا توجد طلبات جديدة غير مقروءة.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         <button
                             type="button"
                             onClick={handleOpenDbStatus}
@@ -212,7 +382,35 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                 </header>
 
                 <main className="flex-1 p-6 md:p-10 overflow-y-auto scrollbar-hide bg-gradient-to-b from-transparent to-gray-900/20">
-                    <div className="max-w-6xl mx-auto animate-fade-in">{renderContent()}</div>
+                    <div className="max-w-6xl mx-auto animate-fade-in">
+                        {canManageOrders && orderNotifications.length > 0 && activePage !== 'orders' && (
+                            <div className="mb-6 flex flex-col gap-4 rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10 p-5 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <p className="mb-1 text-sm font-black text-amber-300">هناك {orderNotifications.length} طلبات جديدة بانتظار مراجعتك</p>
+                                    <p className="text-sm leading-relaxed text-gray-200">
+                                        افتح صفحة الطلبات لمراجعة إثبات الدفع، اعتماد المبلغ المدفوع، ثم قبول أو رفض الطلب.
+                                    </p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenOrdersPage()}
+                                        className="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-black text-gray-900 transition-colors hover:bg-amber-400"
+                                    >
+                                        فتح الطلبات
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => markNotificationsAsRead()}
+                                        className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-gray-200 transition-colors hover:bg-white/10"
+                                    >
+                                        تعليم كمقروء
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {renderContent()}
+                    </div>
                 </main>
             </div>
         </div>

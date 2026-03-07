@@ -94,10 +94,10 @@ export const api = {
   saveOrder: (order: Order): Promise<Order> => request<Order>('/api/orders', { method: 'POST', body: JSON.stringify(order) }),
   updateOrderStatus: (id: string, status: Order['status']): Promise<Order> =>
     request<Order>(`/api/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
-  updateOrderPaymentStatus: (id: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, status?: Order['status']): Promise<Order> =>
+  updateOrderPaymentStatus: (id: string, paymentStatus: Order['paymentVerificationStatus'], rejectionReason?: string, status?: Order['status'], paidAmount?: number): Promise<Order> =>
     request<Order>(`/api/orders/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ paymentVerificationStatus: paymentStatus, rejectionReason, status })
+      body: JSON.stringify({ paymentVerificationStatus: paymentStatus, rejectionReason, status, paidAmount })
     }),
   deleteOrder: (id: string): Promise<void> => request(`/api/orders/${id}`, { method: 'DELETE' }),
 

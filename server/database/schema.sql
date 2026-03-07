@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS orders (
   date VARCHAR(32) NOT NULL,
   status VARCHAR(32) NOT NULL DEFAULT 'قيد المعالجة',
   total DECIMAL(12,2) NOT NULL DEFAULT 0,
+  paid_amount DECIMAL(12,2) DEFAULT NULL,
   payment_confirmation_image VARCHAR(1024) DEFAULT NULL,
   payment_method VARCHAR(32) DEFAULT NULL,
   payment_verification_status VARCHAR(32) NOT NULL DEFAULT 'قيد المراجعة',

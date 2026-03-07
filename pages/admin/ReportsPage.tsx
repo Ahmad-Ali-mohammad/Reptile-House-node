@@ -81,6 +81,7 @@ const ReportsPage: React.FC = () => {
     const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
     const totalOrders = filteredOrders.length;
     const acceptedPayments = filteredOrders.filter((order) => order.paymentVerificationStatus === 'مقبول');
+    const acceptedRevenue = acceptedPayments.reduce((sum, order) => sum + (typeof order.paidAmount === 'number' ? order.paidAmount : order.total), 0);
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     const byDate = filteredOrders.reduce<Record<string, { revenue: number; orders: number }>>((accumulator, order) => {
@@ -101,6 +102,7 @@ const ReportsPage: React.FC = () => {
       totalRevenue,
       totalOrders,
       averageOrderValue,
+      acceptedRevenue,
       acceptedPayments: acceptedPayments.length,
       timeline,
     };
@@ -194,7 +196,7 @@ const ReportsPage: React.FC = () => {
         <SummaryCard label="إجمالي المبيعات" value={`$${salesSummary.totalRevenue.toFixed(2)}`} accent="green" icon="💰" />
         <SummaryCard label="عدد الطلبات" value={String(salesSummary.totalOrders)} accent="blue" icon="📦" />
         <SummaryCard label="متوسط الطلب" value={`$${salesSummary.averageOrderValue.toFixed(2)}`} accent="amber" icon="📈" />
-        <SummaryCard label="دفعات مقبولة" value={String(salesSummary.acceptedPayments)} accent="purple" icon="✅" />
+        <SummaryCard label="المقبوض المؤكد" value={`$${salesSummary.acceptedRevenue.toFixed(2)}`} accent="purple" icon="✅" />
       </div>
 
       <Card title="الحركة اليومية">
@@ -223,12 +225,13 @@ const ReportsPage: React.FC = () => {
 
       <Card title="الطلبات ضمن الفترة">
         <DataTable
-          headers={['رقم الطلب', 'العميل', 'التاريخ', 'الإجمالي', 'حالة الدفع', 'الحالة']}
+          headers={['رقم الطلب', 'العميل', 'التاريخ', 'الإجمالي', 'المدفوع', 'حالة الدفع', 'الحالة']}
           rows={filteredOrders.map((order) => [
             order.id,
             getCustomerDisplayName(order),
             new Date(order.date).toLocaleDateString('ar-SY'),
             `$${order.total.toFixed(2)}`,
+            `$${(typeof order.paidAmount === 'number' ? order.paidAmount : 0).toFixed(2)}`,
             order.paymentVerificationStatus,
             order.status,
           ])}
@@ -304,6 +307,7 @@ const ReportsPage: React.FC = () => {
             ['المدفوعات قيد المراجعة', String(paymentStatusSummary['قيد المراجعة'] || 0)],
             ['المدفوعات المقبولة', String(paymentStatusSummary['مقبول'] || 0)],
             ['المدفوعات المرفوضة', String(paymentStatusSummary['مرفوض'] || 0)],
+            ['إجمالي المقبوض المؤكد', `$${salesSummary.acceptedRevenue.toFixed(2)}`],
             ['الطلبات المكتملة', String(orderStatusSummary['تم التوصيل'] || 0)],
             ['إجمالي المستخدمين', String(performanceSummary.usersCount)],
           ]}

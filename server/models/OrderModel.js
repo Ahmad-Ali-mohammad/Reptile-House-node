@@ -74,6 +74,7 @@ async function ensureExtendedColumns() {
     "ALTER TABLE orders ADD COLUMN shipping_address VARCHAR(512) DEFAULT NULL",
     "ALTER TABLE orders ADD COLUMN shipping_city VARCHAR(128) DEFAULT NULL",
     "ALTER TABLE orders ADD COLUMN shipping_country VARCHAR(128) DEFAULT NULL",
+    "ALTER TABLE orders ADD COLUMN paid_amount DECIMAL(12,2) DEFAULT NULL",
   ];
 
   for (const statement of statements) {
@@ -159,9 +160,9 @@ export async function create(data) {
       `INSERT INTO orders (
         id, customer_id, customer_name, customer_email, customer_phone,
         shipping_address, shipping_city, shipping_country,
-        date, status, total, payment_confirmation_image, payment_method, payment_verification_status, rejection_reason
+        date, status, total, paid_amount, payment_confirmation_image, payment_method, payment_verification_status, rejection_reason
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         d.id,
         d.customer_id ?? null,
@@ -174,6 +175,7 @@ export async function create(data) {
         d.date,
         normalizedStatus,
         d.total ?? 0,
+        d.paid_amount ?? null,
         d.payment_confirmation_image ?? null,
         d.payment_method ?? null,
         normalizedPaymentStatus,
@@ -185,9 +187,9 @@ export async function create(data) {
       `INSERT INTO orders (
         id, customer_name, customer_email, customer_phone,
         shipping_address, shipping_city, shipping_country,
-        date, status, total, payment_confirmation_image, payment_method, payment_verification_status, rejection_reason
+        date, status, total, paid_amount, payment_confirmation_image, payment_method, payment_verification_status, rejection_reason
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         d.id,
         d.customer_name ?? null,
@@ -199,6 +201,7 @@ export async function create(data) {
         d.date,
         normalizedStatus,
         d.total ?? 0,
+        d.paid_amount ?? null,
         d.payment_confirmation_image ?? null,
         d.payment_method ?? null,
         normalizedPaymentStatus,
@@ -234,6 +237,7 @@ export async function update(id, data) {
     'date',
     'status',
     'total',
+    'paid_amount',
     'payment_confirmation_image',
     'payment_method',
     'payment_verification_status',
@@ -277,6 +281,10 @@ export async function updateStatus(id, payload) {
   if (payload.status !== undefined) updates.status = normalizeOrderStatus(payload.status);
   if (payload.paymentVerificationStatus !== undefined) updates.paymentVerificationStatus = normalizePaymentStatus(payload.paymentVerificationStatus);
   if (payload.rejectionReason !== undefined) updates.rejectionReason = payload.rejectionReason;
+  if (payload.paidAmount !== undefined) updates.paidAmount = payload.paidAmount;
+  if (payload.paymentVerificationStatus !== undefined && normalizePaymentStatus(payload.paymentVerificationStatus) === 'مقبول' && payload.rejectionReason === undefined) {
+    updates.rejectionReason = null;
+  }
   if (Object.keys(updates).length === 0) return existing;
 
   const d = objToSnake(updates);

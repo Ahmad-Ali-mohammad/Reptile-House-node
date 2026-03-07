@@ -148,6 +148,7 @@ export interface Order {
   date: string;
   status: 'قيد المعالجة' | 'تم الشحن' | 'تم التوصيل' | 'تم التأكيد';
   total: number;
+  paidAmount?: number;
   customerId?: string;
   customerName?: string;
   customerEmail?: string;
@@ -160,6 +161,7 @@ export interface Order {
   paymentMethod?: 'card' | 'shamcash';
   paymentVerificationStatus: 'قيد المراجعة' | 'مقبول' | 'مرفوض';
   rejectionReason?: string;
+  createdAt?: string;
 }
 
 export interface ShamCashConfig {

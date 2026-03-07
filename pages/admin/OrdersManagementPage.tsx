@@ -113,8 +113,8 @@ const OrdersManagementPage: React.FC = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handleVerifyPayment = (orderId: string, status: Order['paymentVerificationStatus'], reason?: string) => {
-    updateOrderPaymentStatus(orderId, status, reason, status === 'مقبول' ? 'تم التأكيد' : 'قيد المعالجة');
+  const handleVerifyPayment = (orderId: string, status: Order['paymentVerificationStatus'], reason?: string, paidAmount?: number) => {
+    updateOrderPaymentStatus(orderId, status, reason, status === 'مقبول' ? 'تم التأكيد' : 'قيد المعالجة', paidAmount);
     setIsPaymentModalOpen(false);
   };
 
@@ -126,6 +126,27 @@ const OrdersManagementPage: React.FC = () => {
           <p className="text-gray-400">مراجعة الدفع، تأكيد التنفيذ، ثم تمرير الطلب إلى الشحن والتسليم.</p>
         </div>
         <HelpButton onClick={() => setIsHelpOpen(true)} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-[1.75rem] border border-amber-500/20 bg-amber-500/10 p-5">
+          <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-amber-300">1. مراجعة الطلب الجديد</p>
+          <p className="text-sm leading-relaxed text-gray-200">
+            عند وصول طلب جديد سيظهر في تبويب <span className="font-black text-white">مراجعة الدفع</span> مع صورة التحويل والمبلغ المدفوع.
+          </p>
+        </div>
+        <div className="rounded-[1.75rem] border border-emerald-500/20 bg-emerald-500/10 p-5">
+          <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-emerald-300">2. قبول أو رفض الدفع</p>
+          <p className="text-sm leading-relaxed text-gray-200">
+            قبول الدفع ينقل الطلب تلقائيًا إلى <span className="font-black text-white">تم التأكيد</span>، ورفضه يبقيه في المعالجة مع سبب الرفض.
+          </p>
+        </div>
+        <div className="rounded-[1.75rem] border border-indigo-500/20 bg-indigo-500/10 p-5">
+          <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-indigo-300">3. التنفيذ والشحن</p>
+          <p className="text-sm leading-relaxed text-gray-200">
+            بعد القبول يحدّث المدير الحالة إلى <span className="font-black text-white">تم الشحن</span> ثم <span className="font-black text-white">تم التوصيل</span>.
+          </p>
+        </div>
       </div>
 
       <TabsSystem tabs={tabs} activeTabId={activeTab} onChange={setActiveTab} />
@@ -173,11 +194,24 @@ const OrdersManagementPage: React.FC = () => {
                         <span>{getPaymentStatusIcon(paymentStatus)}</span>
                         {paymentStatus}
                       </div>
+                      <p className="mt-3 text-sm font-poppins font-black text-emerald-400">
+                        ${typeof order.paidAmount === 'number' ? order.paidAmount.toFixed(2) : '0.00'}
+                      </p>
+                      <p className="text-[11px] text-gray-500">المبلغ المدفوع</p>
                       {order.rejectionReason && paymentStatus === 'مرفوض' && (
                         <p className="mt-3 max-w-xs text-xs leading-relaxed text-red-300">{order.rejectionReason}</p>
                       )}
                     </td>
-                    <td className="p-6 font-poppins text-lg font-black text-amber-500">${order.total.toFixed(2)}</td>
+                    <td className="p-6">
+                      <p className="font-poppins text-lg font-black text-amber-500">${order.total.toFixed(2)}</p>
+                      {typeof order.paidAmount === 'number' && (
+                        <p className={`mt-2 text-xs font-bold ${Math.abs(order.total - order.paidAmount) < 0.01 ? 'text-emerald-300' : 'text-yellow-300'}`}>
+                          {Math.abs(order.total - order.paidAmount) < 0.01
+                            ? 'المبلغ مطابق للإجمالي'
+                            : `فرق الدفع: $${Math.abs(order.total - order.paidAmount).toFixed(2)}`}
+                        </p>
+                      )}
+                    </td>
                     <td className="w-56 p-6 text-center">
                       <select
                         value={status}

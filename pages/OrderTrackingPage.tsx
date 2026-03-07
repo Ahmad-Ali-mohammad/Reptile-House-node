@@ -38,9 +38,15 @@ const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ setPage, orderId 
       <div className="space-y-3 text-center">
         <h1 className="text-4xl font-bold">تتبع الطلب</h1>
         <p className="font-poppins text-lg font-bold text-amber-400">#{order.id}</p>
-        <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold ${getPaymentStatusClasses(paymentStatus)}`}>
-          <span>{getPaymentStatusIcon(paymentStatus)}</span>
-          حالة الدفع: {paymentStatus}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold ${getPaymentStatusClasses(paymentStatus)}`}>
+            <span>{getPaymentStatusIcon(paymentStatus)}</span>
+            حالة الدفع: {paymentStatus}
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-300">
+            <span>المبلغ المدفوع:</span>
+            <span className="font-poppins">${typeof order.paidAmount === 'number' ? order.paidAmount.toFixed(2) : order.total.toFixed(2)}</span>
+          </div>
         </div>
       </div>
 

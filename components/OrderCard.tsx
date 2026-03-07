@@ -49,6 +49,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, setPage }) => {
             <div className="bg-black/20 rounded-xl p-4 text-gray-300">
               <p className="text-gray-500 mb-2">الدفع</p>
               <p>{order.paymentMethod === 'shamcash' ? 'شام كاش' : 'بطاقة'}</p>
+              <p className="mt-2 font-poppins text-emerald-300">
+                المبلغ المدفوع: ${typeof order.paidAmount === 'number' ? order.paidAmount.toFixed(2) : order.total.toFixed(2)}
+              </p>
               {order.rejectionReason && paymentStatus === 'مرفوض' && <p className="mt-2 text-red-300">سبب الرفض: {order.rejectionReason}</p>}
             </div>
           </div>

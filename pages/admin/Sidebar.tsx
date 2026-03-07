@@ -23,6 +23,7 @@ interface SidebarProps {
   setActivePage: (page: DashboardPage) => void;
   setAppMode: (mode: AppMode) => void;
   setPage: (page: Page) => void;
+  ordersBadgeCount?: number;
 }
 
 const sidebarConfig = [
@@ -89,7 +90,7 @@ const sidebarConfig = [
   }
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, setAppMode, setPage }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, setAppMode, setPage, ordersBadgeCount = 0 }) => {
   const { user, logout } = useAuth();
   const [openSections, setOpenSections] = useState<string[]>(sidebarConfig.map(s => s.name));
 
@@ -141,6 +142,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, setAppMode
                 >
                   {item.icon}
                   <span className="text-sm">{item.name}</span>
+                  {item.page === 'orders' && ordersBadgeCount > 0 && (
+                    <span className={`mr-auto min-w-[1.75rem] rounded-full px-2 py-0.5 text-center text-[11px] font-black ${activePage === item.page ? 'bg-gray-900/15 text-gray-900' : 'bg-amber-500/15 text-amber-300'}`}>
+                      {ordersBadgeCount}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

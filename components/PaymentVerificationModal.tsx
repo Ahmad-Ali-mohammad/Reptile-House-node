@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Order } from '../types';
 import { getCustomerDisplayName, getPaymentStatusClasses, getPaymentStatusIcon, getShippingSummary, normalizePaymentStatus } from '../utils/orderWorkflow';
 
@@ -6,19 +6,35 @@ interface PaymentVerificationModalProps {
   isOpen: boolean;
   order: Order | null;
   onClose: () => void;
-  onVerify: (orderId: string, status: Order['paymentVerificationStatus'], reason?: string) => void;
+  onVerify: (orderId: string, status: Order['paymentVerificationStatus'], reason?: string, paidAmount?: number) => void;
 }
 
 const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isOpen, order, onClose, onVerify }) => {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [paidAmountInput, setPaidAmountInput] = useState('');
+
+  useEffect(() => {
+    if (!order || !isOpen) {
+      return;
+    }
+
+    const nextValue = typeof order.paidAmount === 'number' && order.paidAmount > 0 ? order.paidAmount : order.total;
+    setPaidAmountInput(nextValue.toFixed(2));
+  }, [isOpen, order]);
 
   if (!isOpen || !order) return null;
 
   const normalizedPaymentStatus = normalizePaymentStatus(order.paymentVerificationStatus);
+  const parsedPaidAmount = Number.parseFloat(paidAmountInput);
 
   const handleAccept = () => {
-    onVerify(order.id, 'مقبول');
+    if (!Number.isFinite(parsedPaidAmount) || parsedPaidAmount <= 0) {
+      alert('يرجى تأكيد المبلغ المدفوع قبل قبول الطلب.');
+      return;
+    }
+
+    onVerify(order.id, 'مقبول', undefined, parsedPaidAmount);
     setShowRejectInput(false);
     setRejectionReason('');
   };
@@ -34,7 +50,7 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
       return;
     }
 
-    onVerify(order.id, 'مرفوض', rejectionReason.trim());
+    onVerify(order.id, 'مرفوض', rejectionReason.trim(), Number.isFinite(parsedPaidAmount) && parsedPaidAmount > 0 ? parsedPaidAmount : undefined);
     setShowRejectInput(false);
     setRejectionReason('');
   };
@@ -72,7 +88,7 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
             <p className="text-gray-400 text-sm mb-2">حالة التحقق</p>
             <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold border ${getPaymentStatusClasses(normalizedPaymentStatus)}`}>
@@ -87,6 +103,12 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
             <p className="text-gray-400 text-sm mb-2">قيمة الطلب</p>
             <p className="text-amber-500 font-poppins font-black text-2xl">${order.total.toFixed(2)}</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+            <p className="text-gray-400 text-sm mb-2">المبلغ المرفوع</p>
+            <p className="text-emerald-400 font-poppins font-black text-2xl">
+              ${typeof order.paidAmount === 'number' ? order.paidAmount.toFixed(2) : '0.00'}
+            </p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
             <p className="text-gray-400 text-sm mb-2">تاريخ الطلب</p>
@@ -157,6 +179,25 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
             />
           </div>
         )}
+
+        <div className="space-y-3">
+          <label htmlFor="paid-amount" className="block text-white font-bold">المبلغ المدفوع المعتمد</label>
+          <input
+            id="paid-amount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            inputMode="decimal"
+            value={paidAmountInput}
+            onChange={(event) => setPaidAmountInput(event.target.value)}
+            placeholder="أدخل المبلغ المؤكد من إثبات الدفع"
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-4 px-5 font-poppins text-white outline-none transition-all focus:ring-2 focus:ring-amber-500/50"
+            dir="ltr"
+          />
+          <p className="text-xs leading-relaxed text-gray-400">
+            يستخدم هذا المبلغ في التقارير وفي متابعة الطلب، ويمكن تعديله هنا إذا اختلف عن إجمالي الطلب أو عن المبلغ الذي أدخله العميل.
+          </p>
+        </div>
 
         <div className="flex gap-4 flex-wrap">
           <button

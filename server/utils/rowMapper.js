@@ -27,6 +27,7 @@ const NUMERIC_KEYS = new Set([
   'price',
   'rating',
   'total',
+  'paid_amount',
   'discount_percentage',
   'founded_year',
   'tax_rate',

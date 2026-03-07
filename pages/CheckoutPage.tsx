@@ -43,6 +43,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
 
   const [shippingForm, setShippingForm] = useState<ShippingForm>(() => createInitialShippingForm(user?.name));
   const [paymentImage, setPaymentImage] = useState('');
+  const [paidAmount, setPaidAmount] = useState(() => total.toFixed(2));
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploadingPaymentImage, setIsUploadingPaymentImage] = useState(false);
   const [shamCashConfig, setShamCashConfig] = useState<ShamCashConfig | null>(null);
@@ -60,6 +61,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
   useEffect(() => {
     api.getShamCashConfig().then(setShamCashConfig).catch(() => setShamCashConfig(null));
   }, []);
+
+  useEffect(() => {
+    setPaidAmount(total.toFixed(2));
+  }, [total]);
 
   const customerName = useMemo(
     () => [shippingForm.firstName, shippingForm.lastName].map((value) => value.trim()).filter(Boolean).join(' '),
@@ -94,6 +99,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
       return;
     }
 
+    const normalizedPaidAmount = Number.parseFloat(paidAmount);
+    if (!Number.isFinite(normalizedPaidAmount) || normalizedPaidAmount <= 0) {
+      alert('يرجى إدخال قيمة صحيحة للمبلغ المدفوع قبل إرسال الطلب.');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -103,6 +114,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
         date: new Date().toISOString().split('T')[0],
         status: 'قيد المعالجة',
         total,
+        paidAmount: normalizedPaidAmount,
         customerId: user.id,
         customerName,
         customerEmail: user.email,
@@ -337,6 +349,31 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
               )}
 
               <div>
+                <label className="mb-3 block text-sm font-bold">المبلغ المدفوع</label>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-4 flex items-center justify-between gap-4 text-sm">
+                    <span className="text-gray-400">إجمالي الطلب الحالي</span>
+                    <span className="font-poppins text-lg font-black text-amber-500">${total.toFixed(2)}</span>
+                  </div>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    inputMode="decimal"
+                    required
+                    value={paidAmount}
+                    onChange={(event) => setPaidAmount(event.target.value)}
+                    placeholder="أدخل المبلغ الذي تم دفعه فعليًا"
+                    className="w-full rounded-xl border border-white/10 bg-black/20 py-3.5 px-5 font-poppins text-white outline-none transition-all focus:ring-2 focus:ring-amber-500/50"
+                    dir="ltr"
+                  />
+                  <p className="mt-3 text-xs leading-relaxed text-gray-400">
+                    يجب إدخال المبلغ المرفوع في التحويل ليظهر للمدير عند مراجعة إثبات الدفع.
+                  </p>
+                </div>
+              </div>
+
+              <div>
                 <label className="mb-3 block text-sm font-bold">ارفع صورة تأكيد الدفع</label>
                 <input
                   type="file"
@@ -391,7 +428,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
             )}
           </button>
           <p className="text-center text-[10px] font-bold uppercase tracking-widest text-gray-500">
-            بعد إرسال الطلب سيظهر في لوحة الإدارة بانتظار مراجعة الدفع ثم يتم تحويله لمراحل التنفيذ والشحن.
+            بعد إرسال الطلب سيظهر في لوحة الإدارة بانتظار مراجعة الدفع والمبلغ المدفوع، ثم يتم تحويله لمراحل التنفيذ والشحن.
           </p>
         </div>
       </form>

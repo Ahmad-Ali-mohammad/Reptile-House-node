@@ -90,6 +90,7 @@ async function run() {
     'ALTER TABLE orders ADD COLUMN shipping_address VARCHAR(512) DEFAULT NULL',
     'ALTER TABLE orders ADD COLUMN shipping_city VARCHAR(128) DEFAULT NULL',
     'ALTER TABLE orders ADD COLUMN shipping_country VARCHAR(128) DEFAULT NULL',
+    'ALTER TABLE orders ADD COLUMN paid_amount DECIMAL(12,2) DEFAULT NULL',
   ]) {
     try {
       await conn.query(statement);
