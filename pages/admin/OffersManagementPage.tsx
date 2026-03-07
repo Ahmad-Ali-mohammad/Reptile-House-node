@@ -382,7 +382,7 @@ const OffersManagementPage: React.FC = () => {
                                         </div>
                                     ) : null}
                                 </div>
-                                <input type="file" ref={fileInputRef} className="hidden" accept={IMAGE_FILE_ACCEPT} onChange={handleImageChange} aria-label="اختيار صورة العرض" />
+                                <input id="offer-image-upload" name="offerImageUpload" type="file" ref={fileInputRef} className="hidden" accept={IMAGE_FILE_ACCEPT} onChange={handleImageChange} aria-label="اختيار صورة العرض" />
                             </div>
 
                             {/* Form Fields */}
@@ -402,6 +402,8 @@ const OffersManagementPage: React.FC = () => {
                                 <div>
                                     <label className="text-xs font-black text-amber-500 uppercase mb-2 block">الوصف</label>
                                     <textarea
+                                        id="offer-description"
+                                        name="offerDescription"
                                         rows={3}
                                         className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white resize-none"
                                         value={editingOffer?.description || ''}
@@ -427,6 +429,8 @@ const OffersManagementPage: React.FC = () => {
                                     <div>
                                         <label className="text-xs font-black text-amber-500 uppercase mb-2 block">الفئة المستهدفة</label>
                                         <input
+                                            id="offer-target-category"
+                                            name="offerTargetCategory"
                                             type="text"
                                             className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                             value={editingOffer?.targetCategory || 'all'}
@@ -464,6 +468,8 @@ const OffersManagementPage: React.FC = () => {
                                     <div>
                                         <label className="text-xs font-black text-amber-500 uppercase mb-2 block">نص الزر</label>
                                         <input
+                                            id="offer-button-text"
+                                            name="offerButtonText"
                                             type="text"
                                             className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                             value={editingOffer?.buttonText || ''}
@@ -475,6 +481,8 @@ const OffersManagementPage: React.FC = () => {
                                     <div>
                                         <label className="text-xs font-black text-amber-500 uppercase mb-2 block">رابط الزر</label>
                                         <input
+                                            id="offer-button-link"
+                                            name="offerButtonLink"
                                             type="text"
                                             className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold font-poppins"
                                             value={editingOffer?.buttonLink || ''}
@@ -487,6 +495,8 @@ const OffersManagementPage: React.FC = () => {
                                 <div>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
+                                            id="offer-active"
+                                            name="offerActive"
                                             type="checkbox"
                                             checked={editingOffer?.isActive !== false}
                                             onChange={e => setEditingOffer({ ...editingOffer, isActive: e.target.checked })}

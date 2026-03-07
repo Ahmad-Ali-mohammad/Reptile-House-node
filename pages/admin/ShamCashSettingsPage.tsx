@@ -77,7 +77,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 text-white sm:p-6 lg:p-8">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
@@ -110,9 +110,9 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                 )}
 
                 {/* Settings Form */}
-                <div className="glass-medium border border-white/10 rounded-2xl p-8 space-y-8">
+                <div className="glass-medium border border-white/10 rounded-2xl p-5 space-y-6 sm:p-8 sm:space-y-8">
                     {/* Active Status Toggle */}
-                    <div className="flex items-center justify-between p-6 bg-white/5 rounded-xl">
+                    <div className="flex flex-col gap-4 rounded-xl bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                         <div>
                             <h3 className="text-lg font-bold mb-1">تفعيل الدفع عبر شام كاش</h3>
                             <p className="text-sm text-gray-400">تمكين أو تعطيل نظام الدفع في الموقع</p>
@@ -136,7 +136,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                             type="file"
                             accept={IMAGE_FILE_ACCEPT}
                             onChange={handleBarcodeUpload}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-5 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all file:bg-amber-500 file:text-gray-900 file:font-bold file:border-0 file:rounded-lg file:px-4 file:py-2 file:ml-4 file:cursor-pointer mb-4"
+                            className="mb-4 w-full rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-white transition-all file:ml-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-amber-500 file:px-4 file:py-2 file:font-bold file:text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                         
                         {config.barcodeImageUrl && (
@@ -145,7 +145,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                                 <img
                                     src={config.barcodeImageUrl}
                                     alt="Barcode Preview"
-                                    className="mx-auto w-64 h-64 object-contain bg-white rounded-lg border-2 border-amber-500 shadow-lg p-4"
+                                    className="mx-auto h-48 w-full max-w-xs rounded-lg border-2 border-amber-500 bg-white p-4 object-contain shadow-lg sm:h-64"
                                 />
                             </div>
                         )}
@@ -162,7 +162,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                             value={config.accountCode}
                             onChange={handleAccountCodeChange}
                             placeholder="000000000000"
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-5 text-white font-poppins text-xl text-center focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-5 py-4 text-center text-lg text-white transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 sm:text-xl"
                         />
                         
                         {config.accountCode && (
@@ -183,7 +183,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                             value={config.accountHolderName}
                             onChange={(e) => setConfig(prev => ({ ...prev, accountHolderName: e.target.value }))}
                             placeholder="محمد أحمد..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-5 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-5 py-4 text-white transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                     </div>
 
@@ -197,7 +197,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                             value={config.phoneNumber}
                             onChange={(e) => setConfig(prev => ({ ...prev, phoneNumber: e.target.value }))}
                             placeholder="+963 XXX XXX XXX"
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-5 text-white font-poppins text-xl text-center focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-5 py-4 text-center text-lg text-white transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 sm:text-xl"
                         />
                     </div>
 
@@ -211,7 +211,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                             value={config.paymentInstructions}
                             onChange={(e) => setConfig(prev => ({ ...prev, paymentInstructions: e.target.value }))}
                             placeholder="أدخل التعليمات التي ستظهر للعملاء..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-5 text-white leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all resize-none"
+                            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-5 py-4 leading-relaxed text-white transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                         {config.paymentInstructions && (
                             <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl">
@@ -249,7 +249,7 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
                     </div>
 
                     {/* Instructions */}
-                    <div className="p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                    <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 sm:p-6">
                         <h4 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -290,5 +290,4 @@ const ShamCashSettingsPage: React.FC<Props> = ({ setPage }) => {
 };
 
 export default ShamCashSettingsPage;
-
 

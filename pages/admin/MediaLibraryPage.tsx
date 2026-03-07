@@ -233,6 +233,8 @@ const MediaLibraryPage: React.FC = () => {
       <div className="flex gap-3 flex-wrap w-full">
         <div className="relative flex-1 min-w-[220px] md:w-72">
           <input
+            id="media-search"
+            name="mediaSearch"
             type="text"
             placeholder="بحث في الملفات..."
             value={searchTerm}
@@ -242,6 +244,8 @@ const MediaLibraryPage: React.FC = () => {
           <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
         </div>
         <select
+          id="media-folder-filter"
+          name="mediaFolderFilter"
           value={activeFolderId}
           onChange={(e) => {
             setActiveFolderId(e.target.value);
@@ -255,6 +259,8 @@ const MediaLibraryPage: React.FC = () => {
           ))}
         </select>
         <select
+          id="media-category-filter"
+          name="mediaCategoryFilter"
           value={activeCategory}
           onChange={(e) => {
             setActiveCategory(e.target.value);
@@ -331,7 +337,7 @@ const MediaLibraryPage: React.FC = () => {
             </div>
           )}
         </div>
-        <input type="file" ref={fileInputRef} className="hidden" accept={MEDIA_FILE_ACCEPT} multiple onChange={handleUpload} aria-label="رفع الملفات" />
+        <input id="media-upload" name="mediaUpload" type="file" ref={fileInputRef} className="hidden" accept={MEDIA_FILE_ACCEPT} multiple onChange={handleUpload} aria-label="رفع الملفات" />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
@@ -347,6 +353,8 @@ const MediaLibraryPage: React.FC = () => {
 
               <label className="absolute top-3 right-3 z-20 bg-black/70 rounded-lg px-2 py-1 flex items-center gap-1 cursor-pointer">
                 <input
+                  id={`media-select-${item.id}`}
+                  name={`mediaSelect-${item.id}`}
                   type="checkbox"
                   checked={selectedIds.includes(item.id)}
                   onChange={(e) => toggleSelect(item.id, e.target.checked)}

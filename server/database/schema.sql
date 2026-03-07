@@ -210,6 +210,66 @@ CREATE TABLE IF NOT EXISTS store_settings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- API keys
+CREATE TABLE IF NOT EXISTS api_keys (
+  id VARCHAR(64) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  key_prefix VARCHAR(32) NOT NULL,
+  key_hash VARCHAR(128) NOT NULL UNIQUE,
+  permissions JSON NOT NULL,
+  usage_count INT NOT NULL DEFAULT 0,
+  last_used_at DATETIME DEFAULT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  expires_at DATE DEFAULT NULL,
+  created_by VARCHAR(64) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_api_keys_active (is_active),
+  INDEX idx_api_keys_created (created_at)
+);
+
+-- Backup settings (single row)
+CREATE TABLE IF NOT EXISTS backup_settings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  enabled TINYINT(1) NOT NULL DEFAULT 1,
+  frequency VARCHAR(16) NOT NULL DEFAULT 'weekly',
+  time_of_day VARCHAR(5) NOT NULL DEFAULT '03:00',
+  day_of_week TINYINT NOT NULL DEFAULT 6,
+  day_of_month TINYINT NOT NULL DEFAULT 1,
+  retention_count INT NOT NULL DEFAULT 4,
+  included_scopes JSON NOT NULL,
+  last_run_at DATETIME DEFAULT NULL,
+  last_status VARCHAR(16) NOT NULL DEFAULT 'idle',
+  last_error TEXT DEFAULT NULL,
+  next_run_at DATETIME DEFAULT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Backup archives metadata
+CREATE TABLE IF NOT EXISTS backups (
+  id VARCHAR(64) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(32) NOT NULL,
+  status VARCHAR(16) NOT NULL DEFAULT 'in_progress',
+  description TEXT,
+  file_name VARCHAR(255) DEFAULT NULL,
+  file_path VARCHAR(1024) DEFAULT NULL,
+  size_bytes BIGINT NOT NULL DEFAULT 0,
+  scope JSON NOT NULL,
+  is_automatic TINYINT(1) NOT NULL DEFAULT 0,
+  triggered_by VARCHAR(64) DEFAULT NULL,
+  started_at DATETIME DEFAULT NULL,
+  completed_at DATETIME DEFAULT NULL,
+  restored_at DATETIME DEFAULT NULL,
+  restore_status VARCHAR(16) DEFAULT NULL,
+  restore_error TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_backups_created (created_at),
+  INDEX idx_backups_status (status),
+  INDEX idx_backups_type (type)
+);
+
 -- أعضاء الفريق
 CREATE TABLE IF NOT EXISTS team_members (
   id VARCHAR(64) PRIMARY KEY,
@@ -366,6 +426,7 @@ INSERT IGNORE INTO contact_info (id, phone, email, address, city, country, worki
 INSERT IGNORE INTO shamcash_config (id, account_code, payment_instructions) VALUES (1, '000000000000', 'قم بمسح الباركود أو إدخال رقم الحساب يدوياً.');
 INSERT IGNORE INTO seo_settings (id) VALUES (1);
 INSERT IGNORE INTO store_settings (id) VALUES (1);
+INSERT IGNORE INTO backup_settings (id, enabled, frequency, time_of_day, day_of_week, day_of_month, retention_count, included_scopes, last_status) VALUES (1, 1, 'weekly', '03:00', 6, 1, 4, JSON_ARRAY('settings', 'products', 'orders', 'customers'), 'idle');
 INSERT IGNORE INTO user_preferences (id, user_id, theme, language, notifications_enabled) VALUES (1, 'default', 'dark', 'ar', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

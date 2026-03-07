@@ -241,6 +241,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
             </h2>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <input
+                id="shipping-first-name"
+                name="shippingFirstName"
                 type="text"
                 placeholder="الاسم الأول"
                 required
@@ -249,6 +251,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
                 className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 px-5 outline-none transition-all focus:ring-2 focus:ring-amber-500/50"
               />
               <input
+                id="shipping-last-name"
+                name="shippingLastName"
                 type="text"
                 placeholder="الاسم الأخير"
                 required
@@ -257,6 +261,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
                 className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 px-5 outline-none transition-all focus:ring-2 focus:ring-amber-500/50"
               />
               <input
+                id="shipping-phone"
+                name="shippingPhone"
                 type="tel"
                 placeholder="رقم الهاتف"
                 required
@@ -266,6 +272,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
                 dir="ltr"
               />
               <input
+                id="shipping-address"
+                name="shippingAddress"
                 type="text"
                 placeholder="العنوان بالتفصيل"
                 required
@@ -274,6 +282,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
                 className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 px-5 outline-none transition-all focus:ring-2 focus:ring-amber-500/50 md:col-span-2"
               />
               <input
+                id="shipping-city"
+                name="shippingCity"
                 type="text"
                 placeholder="المدينة"
                 required
@@ -282,6 +292,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
                 className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 px-5 outline-none transition-all focus:ring-2 focus:ring-amber-500/50"
               />
               <input
+                id="shipping-country"
+                name="shippingCountry"
                 type="text"
                 placeholder="الدولة"
                 required
@@ -356,6 +368,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
                     <span className="font-poppins text-lg font-black text-amber-500">${total.toFixed(2)}</span>
                   </div>
                   <input
+                    id="paid-amount-checkout"
+                    name="paidAmountCheckout"
                     type="number"
                     min="0.01"
                     step="0.01"
@@ -376,6 +390,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ setPage, setLastOrderId }) 
               <div>
                 <label className="mb-3 block text-sm font-bold">ارفع صورة تأكيد الدفع</label>
                 <input
+                  id="payment-proof-upload"
+                  name="paymentProofUpload"
                   type="file"
                   accept={IMAGE_FILE_ACCEPT}
                   required={!paymentImage}

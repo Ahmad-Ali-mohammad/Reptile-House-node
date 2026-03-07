@@ -156,6 +156,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilters }) =>
                                         {hierarchy.subspecies.map(subspecies => (
                                             <label key={subspecies} className="flex items-center gap-3 cursor-pointer group pr-6">
                                                 <input
+                                                    id={`species-${subspecies.replace(/\s+/g, '-').toLowerCase()}`}
+                                                    name={`species-${subspecies.replace(/\s+/g, '-').toLowerCase()}`}
                                                     type="checkbox"
                                                     checked={filters.species.includes(subspecies)}
                                                     onChange={() => toggleSpecies(subspecies)}
@@ -182,6 +184,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilters }) =>
                                 {customSpecies.map(subspecies => (
                                     <label key={subspecies} className="flex items-center gap-3 cursor-pointer group pr-6">
                                         <input
+                                            id={`custom-species-${subspecies.replace(/\s+/g, '-').toLowerCase()}`}
+                                            name={`customSpecies-${subspecies.replace(/\s+/g, '-').toLowerCase()}`}
                                             type="checkbox"
                                             checked={filters.species.includes(subspecies)}
                                             onChange={() => toggleSpecies(subspecies)}
@@ -234,6 +238,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilters }) =>
                                                 {activeOptions.map((option: any) => (
                                                     <label key={option.id} className="flex items-center gap-3 cursor-pointer group pr-2">
                                                         <input
+                                                            id={`dynamic-filter-${group.id}-${option.id}`}
+                                                            name={`dynamicFilter-${group.id}-${option.id}`}
                                                             type="checkbox"
                                                             className="w-4 h-4 rounded border-white/20 bg-transparent text-cyan-500 focus:ring-cyan-500"
                                                         />

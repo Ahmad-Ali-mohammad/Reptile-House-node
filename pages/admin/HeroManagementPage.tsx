@@ -163,7 +163,7 @@ const HeroManagementPage: React.FC = () => {
                                             </div>
                                         ) : null}
                                     </div>
-                                    <input ref={fileInputRef} type="file" accept={IMAGE_FILE_ACCEPT} className="hidden" onChange={handleImageChange} />
+                                    <input id="hero-slide-upload" name="heroSlideUpload" ref={fileInputRef} type="file" accept={IMAGE_FILE_ACCEPT} className="hidden" onChange={handleImageChange} />
                                 </div>
                                 <div>
                                     <label htmlFor="hero-slide-image" className="text-[10px] font-black text-amber-500 uppercase mb-2 block">رابط الصورة</label>
@@ -186,7 +186,7 @@ const HeroManagementPage: React.FC = () => {
                                     </select>
                                 </div>
                                 <label className="flex items-center gap-4 cursor-pointer p-4 bg-white/5 rounded-2xl border border-white/10">
-                                    <input type="checkbox" className="w-6 h-6 rounded-lg accent-amber-500" checked={editingSlide?.active || false} onChange={e => setEditingSlide({ ...editingSlide, active: e.target.checked })} />
+                                    <input id="hero-slide-active" name="heroSlideActive" type="checkbox" className="w-6 h-6 rounded-lg accent-amber-500" checked={editingSlide?.active || false} onChange={e => setEditingSlide({ ...editingSlide, active: e.target.checked })} />
                                     <span className="text-sm font-black text-gray-300">تفعيل في الصفحة الرئيسية</span>
                                 </label>
                             </div>

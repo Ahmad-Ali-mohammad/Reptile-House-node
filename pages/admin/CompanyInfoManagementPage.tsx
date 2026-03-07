@@ -403,7 +403,7 @@ const CompanyInfoManagementPage: React.FC = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-6 sticky bottom-6 bg-gradient-to-t from-[#0a0c10] pt-8 pb-4">
+            <div className="sticky bottom-4 flex flex-col gap-3 bg-gradient-to-t from-[#0a0c10] pt-6 pb-3 sm:bottom-6 sm:flex-row sm:gap-6 sm:pt-8 sm:pb-4">
                 <button
                     onClick={handleSave}
                     disabled={isSaving}

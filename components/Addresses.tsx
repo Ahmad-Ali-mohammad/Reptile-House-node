@@ -121,6 +121,8 @@ const Addresses: React.FC = () => {
                             <div>
                                 <label className="block text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 block">اسم العنوان (مثلاً: المنزل، العمل)</label>
                                 <input 
+                                    id="address-label"
+                                    name="addressLabel"
                                     required
                                     type="text" 
                                     className="w-full bg-[#1a1c23] border border-white/10 rounded-xl py-4 px-6 focus:ring-2 focus:ring-amber-500/50 outline-none text-white font-bold shadow-inner"
@@ -131,6 +133,8 @@ const Addresses: React.FC = () => {
                             <div>
                                 <label className="block text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 block">العنوان التفصيلي</label>
                                 <input 
+                                    id="address-street"
+                                    name="addressStreet"
                                     required
                                     type="text" 
                                     className="w-full bg-[#1a1c23] border border-white/10 rounded-xl py-4 px-6 focus:ring-2 focus:ring-amber-500/50 outline-none text-white font-bold shadow-inner"
@@ -142,6 +146,8 @@ const Addresses: React.FC = () => {
                                 <div>
                                     <label className="block text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 block">المدينة</label>
                                     <input 
+                                        id="address-city"
+                                        name="addressCity"
                                         required
                                         type="text" 
                                         className="w-full bg-[#1a1c23] border border-white/10 rounded-xl py-4 px-6 focus:ring-2 focus:ring-amber-500/50 outline-none text-white font-bold shadow-inner"
@@ -152,6 +158,8 @@ const Addresses: React.FC = () => {
                                 <div>
                                     <label className="block text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 block">البلد</label>
                                     <input 
+                                        id="address-country"
+                                        name="addressCountry"
                                         required
                                         type="text" 
                                         className="w-full bg-[#1a1c23] border border-white/10 rounded-xl py-4 px-6 focus:ring-2 focus:ring-amber-500/50 outline-none text-white font-bold shadow-inner"
@@ -162,6 +170,8 @@ const Addresses: React.FC = () => {
                             </div>
                             <label className="flex items-center gap-4 cursor-pointer p-2 hover:bg-white/5 rounded-xl transition-colors">
                                 <input 
+                                    id="address-default"
+                                    name="addressDefault"
                                     type="checkbox" 
                                     className="w-6 h-6 rounded-lg border-white/10 bg-transparent text-amber-500 focus:ring-amber-500/50 cursor-pointer"
                                     checked={editingAddress?.isDefault || false}

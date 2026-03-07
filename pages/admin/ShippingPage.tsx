@@ -116,6 +116,8 @@ const ShippingPage: React.FC = () => {
                 تحديث حالة التوصيل
               </label>
               <select
+                id={`shipping-status-${order.id}`}
+                name={`shippingStatus-${order.id}`}
                 value={order.status}
                 onChange={(event) => handleStatusChange(order, event.target.value as Order['status'])}
                 className="w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-white/5 p-3 text-center text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-amber-500/50"

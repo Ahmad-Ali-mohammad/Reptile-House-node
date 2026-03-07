@@ -72,6 +72,8 @@ const UsersManagementPage: React.FC = () => {
                 </div>
                 <div className="relative w-full md:w-96">
                     <input 
+                        id="users-search"
+                        name="usersSearch"
                         type="text" 
                         placeholder="ابحث عن مستخدم بالاسم أو البريد..." 
                         value={searchTerm}
@@ -80,6 +82,13 @@ const UsersManagementPage: React.FC = () => {
                     />
                     <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
                 </div>
+
+                {filteredUsers.length === 0 && (
+                    <div className="flex flex-col items-center p-12 text-center lg:hidden">
+                        <UserIcon className="w-16 h-16 text-gray-700 mb-4 opacity-20" />
+                        <p className="text-gray-500 font-bold italic">لا يوجد مستخدمين يطابقون بحثك</p>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -98,7 +107,66 @@ const UsersManagementPage: React.FC = () => {
             </div>
 
             <div className="glass-dark rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl bg-[#11141b]/60">
-                <div className="overflow-x-auto">
+                {filteredUsers.length > 0 && (
+                    <div className="space-y-4 p-4 lg:hidden">
+                        {filteredUsers.map(user => (
+                            <article key={user.id} className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 bg-gray-800 shrink-0">
+                                            {user.avatarUrl ? (
+                                                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-amber-500 font-black text-xl">
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-black text-white truncate">{user.name}</p>
+                                            <p className="text-xs text-gray-400 break-all">{user.email}</p>
+                                            <p className="text-[10px] text-gray-500 font-poppins uppercase tracking-widest mt-1">UID: {user.id.slice(0, 8)}</p>
+                                        </div>
+                                    </div>
+                                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase border shrink-0 ${getRoleBadgeClasses(user.role)}`}>
+                                        {getRoleLabel(user.role)}
+                                    </span>
+                                </div>
+
+                                <div className="mt-4 space-y-2">
+                                    <label htmlFor={`user-role-mobile-${user.id}`} className="block text-[11px] font-black uppercase tracking-widest text-gray-500">
+                                        تعديل الصلاحية
+                                    </label>
+                                    <select
+                                        id={`user-role-mobile-${user.id}`}
+                                        name={`userRoleMobile-${user.id}`}
+                                        value={user.role}
+                                        onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer text-white appearance-none text-center"
+                                    >
+                                        <option value="user">عميل</option>
+                                        <option value="editor">محرر</option>
+                                        <option value="manager">مدير</option>
+                                        <option value="admin">مسؤول</option>
+                                    </select>
+                                </div>
+
+                                <div className="mt-4 flex justify-end">
+                                    <button
+                                        onClick={() => handleDeleteClick(user.id)}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-black text-red-300 transition-all hover:bg-red-500 hover:text-white border border-red-500/10"
+                                        title="حذف الحساب"
+                                    >
+                                        <TrashIcon className="w-4 h-4" />
+                                        <span>حذف الحساب</span>
+                                    </button>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                )}
+
+                <div className="hidden overflow-x-auto lg:block">
                     <table className="w-full text-right">
                         <thead>
                             <tr className="bg-white/5 border-b border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-widest">
@@ -137,6 +205,8 @@ const UsersManagementPage: React.FC = () => {
                                     </td>
                                     <td className="p-6">
                                         <select 
+                                            id={`user-role-${user.id}`}
+                                            name={`userRole-${user.id}`}
                                             value={user.role}
                                             onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                                             className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer text-white appearance-none text-center min-w-[140px]"

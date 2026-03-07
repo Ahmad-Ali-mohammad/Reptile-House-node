@@ -152,11 +152,11 @@ const ContactPage: React.FC = () => {
         <div className="bg-white/5 backdrop-filter backdrop-blur-lg border border-white/20 rounded-2xl p-8">
           <h2 className="text-2xl font-bold mb-6">راسلنا مباشرة</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input type="text" placeholder="الاسم الكامل" required className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
-            <input type="email" placeholder="البريد الإلكتروني" required className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
-            <input type="tel" placeholder="رقم الهاتف (اختياري)" className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
-            <input type="text" placeholder="الموضوع" className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
-            <textarea placeholder="اكتب رسالتك هنا..." required rows={4} className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <input id="contact-full-name" name="contactFullName" type="text" placeholder="الاسم الكامل" required className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <input id="contact-email" name="contactEmail" type="email" placeholder="البريد الإلكتروني" required className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <input id="contact-phone" name="contactPhone" type="tel" placeholder="رقم الهاتف (اختياري)" className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <input id="contact-subject" name="contactSubject" type="text" placeholder="الموضوع" className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <textarea id="contact-message" name="contactMessage" placeholder="اكتب رسالتك هنا..." required rows={4} className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" />
             <button type="submit" className="w-full bg-amber-500 text-gray-900 font-bold py-3 px-4 rounded-lg hover:bg-amber-400 transition-colors">
               إرسال الرسالة
             </button>

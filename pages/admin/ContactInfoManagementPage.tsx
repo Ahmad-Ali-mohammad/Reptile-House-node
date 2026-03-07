@@ -40,7 +40,9 @@ const normalizeSocialMedia = (value: unknown): ContactInfo['socialMedia'] => {
         facebook: typeof socialMedia.facebook === 'string' ? socialMedia.facebook : '',
         instagram: typeof socialMedia.instagram === 'string' ? socialMedia.instagram : '',
         whatsapp: typeof socialMedia.whatsapp === 'string' ? socialMedia.whatsapp : '',
-        telegram: typeof socialMedia.telegram === 'string' ? socialMedia.telegram : ''
+        telegram: typeof socialMedia.telegram === 'string' ? socialMedia.telegram : '',
+        twitter: typeof socialMedia.twitter === 'string' ? socialMedia.twitter : '',
+        youtube: typeof socialMedia.youtube === 'string' ? socialMedia.youtube : ''
     };
 };
 
@@ -188,6 +190,22 @@ const ContactInfoManagementPage: React.FC = () => {
                                 </a>
                             </div>
                         )}
+                        {contactInfo.socialMedia?.twitter && (
+                            <div>
+                                <p className="text-gray-500 text-sm mb-1">X / تويتر</p>
+                                <a href={contactInfo.socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline break-all">
+                                    {contactInfo.socialMedia.twitter}
+                                </a>
+                            </div>
+                        )}
+                        {contactInfo.socialMedia?.youtube && (
+                            <div>
+                                <p className="text-gray-500 text-sm mb-1">يوتيوب</p>
+                                <a href={contactInfo.socialMedia.youtube} target="_blank" rel="noopener noreferrer" className="text-red-400 hover:underline break-all">
+                                    {contactInfo.socialMedia.youtube}
+                                </a>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -231,6 +249,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 رقم الهاتف <span className="text-red-500">*</span>
                             </label>
                             <input
+                                id="contact-phone"
+                                name="phone"
                                 type="tel"
                                 required
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold font-poppins"
@@ -245,6 +265,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 البريد الإلكتروني <span className="text-red-500">*</span>
                             </label>
                             <input
+                                id="contact-email"
+                                name="email"
                                 type="email"
                                 required
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
@@ -258,6 +280,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 ساعات العمل
                             </label>
                             <input
+                                id="contact-working-hours"
+                                name="workingHours"
                                 type="text"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                 value={editedInfo.workingHours}
@@ -277,6 +301,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 العنوان
                             </label>
                             <input
+                                id="contact-address"
+                                name="address"
                                 type="text"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                 value={editedInfo.address}
@@ -289,6 +315,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 المدينة
                             </label>
                             <input
+                                id="contact-city"
+                                name="city"
                                 type="text"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                 value={editedInfo.city}
@@ -301,6 +329,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 الدولة
                             </label>
                             <input
+                                id="contact-country"
+                                name="country"
                                 type="text"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                 value={editedInfo.country}
@@ -320,6 +350,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 فيسبوك (URL)
                             </label>
                             <input
+                                id="contact-facebook"
+                                name="facebook"
                                 type="url"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                 value={editedInfo.socialMedia?.facebook || ''}
@@ -335,6 +367,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 إنستغرام (URL)
                             </label>
                             <input
+                                id="contact-instagram"
+                                name="instagram"
                                 type="url"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                 value={editedInfo.socialMedia?.instagram || ''}
@@ -350,6 +384,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 واتساب (رقم الهاتف مع رمز الدولة)
                             </label>
                             <input
+                                id="contact-whatsapp"
+                                name="whatsapp"
                                 type="tel"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold font-poppins"
                                 value={editedInfo.socialMedia?.whatsapp || ''}
@@ -366,6 +402,8 @@ const ContactInfoManagementPage: React.FC = () => {
                                 تيليجرام (URL)
                             </label>
                             <input
+                                id="contact-telegram"
+                                name="telegram"
                                 type="url"
                                 className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                 value={editedInfo.socialMedia?.telegram || ''}
@@ -376,12 +414,46 @@ const ContactInfoManagementPage: React.FC = () => {
                                 placeholder="https://t.me/..."
                             />
                         </div>
+                        <div>
+                            <label htmlFor="contact-twitter" className="text-xs font-black text-gray-400 uppercase mb-2 block">
+                                X / تويتر (URL)
+                            </label>
+                            <input
+                                id="contact-twitter"
+                                name="twitter"
+                                type="url"
+                                className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
+                                value={editedInfo.socialMedia?.twitter || ''}
+                                onChange={e => setEditedInfo({
+                                    ...editedInfo,
+                                    socialMedia: { ...editedInfo.socialMedia, twitter: e.target.value }
+                                })}
+                                placeholder="https://x.com/..."
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="contact-youtube" className="text-xs font-black text-gray-400 uppercase mb-2 block">
+                                يوتيوب (URL)
+                            </label>
+                            <input
+                                id="contact-youtube"
+                                name="youtube"
+                                type="url"
+                                className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
+                                value={editedInfo.socialMedia?.youtube || ''}
+                                onChange={e => setEditedInfo({
+                                    ...editedInfo,
+                                    socialMedia: { ...editedInfo.socialMedia, youtube: e.target.value }
+                                })}
+                                placeholder="https://youtube.com/..."
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-6 sticky bottom-6 bg-gradient-to-t from-[#0a0c10] pt-8 pb-4">
+            <div className="sticky bottom-6 flex flex-col gap-4 bg-gradient-to-t from-[#0a0c10] pt-8 pb-4 sm:flex-row sm:gap-6">
                 <button
                     onClick={handleSave}
                     disabled={isSaving}

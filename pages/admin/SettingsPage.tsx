@@ -127,6 +127,8 @@ const normalizeContactInfo = (value?: Partial<ContactInfo> | null): ContactInfo 
     instagram: typeof value?.socialMedia?.instagram === 'string' ? value.socialMedia.instagram : '',
     whatsapp: typeof value?.socialMedia?.whatsapp === 'string' ? value.socialMedia.whatsapp : '',
     telegram: typeof value?.socialMedia?.telegram === 'string' ? value.socialMedia.telegram : '',
+    twitter: typeof value?.socialMedia?.twitter === 'string' ? value.socialMedia.twitter : '',
+    youtube: typeof value?.socialMedia?.youtube === 'string' ? value.socialMedia.youtube : '',
   },
 });
 
@@ -150,8 +152,8 @@ const buildFormState = (storeSettings: StoreSettings, companyInfo: CompanyInfo, 
   socialLinks: {
     facebook: contactInfo.socialMedia.facebook || '',
     instagram: contactInfo.socialMedia.instagram || '',
-    twitter: '',
-    youtube: '',
+    twitter: contactInfo.socialMedia.twitter || '',
+    youtube: contactInfo.socialMedia.youtube || '',
   },
   theme: {
     primaryColor: storeSettings.theme.primaryColor,
@@ -262,6 +264,8 @@ const SettingsPage: React.FC = () => {
         instagram: settings.socialLinks.instagram.trim(),
         whatsapp: contactInfo.socialMedia.whatsapp || '',
         telegram: contactInfo.socialMedia.telegram || '',
+        twitter: settings.socialLinks.twitter.trim(),
+        youtube: settings.socialLinks.youtube.trim(),
       },
     };
 
@@ -393,15 +397,15 @@ const SettingsPage: React.FC = () => {
         return (
           <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={settings.enableNotifications} onChange={(e) => handleFieldChange('enableNotifications', e.target.checked)} className="w-5 h-5" />
+              <input id="enable-notifications" name="enableNotifications" type="checkbox" checked={settings.enableNotifications} onChange={(e) => handleFieldChange('enableNotifications', e.target.checked)} className="w-5 h-5" />
               <span>تفعيل الإشعارات العامة</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={settings.enableEmailNotifications} onChange={(e) => handleFieldChange('enableEmailNotifications', e.target.checked)} className="w-5 h-5" />
+              <input id="enable-email-notifications" name="enableEmailNotifications" type="checkbox" checked={settings.enableEmailNotifications} onChange={(e) => handleFieldChange('enableEmailNotifications', e.target.checked)} className="w-5 h-5" />
               <span>إشعارات البريد الإلكتروني</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={settings.enableSmsNotifications} onChange={(e) => handleFieldChange('enableSmsNotifications', e.target.checked)} className="w-5 h-5" />
+              <input id="enable-sms-notifications" name="enableSmsNotifications" type="checkbox" checked={settings.enableSmsNotifications} onChange={(e) => handleFieldChange('enableSmsNotifications', e.target.checked)} className="w-5 h-5" />
               <span>إشعارات الرسائل النصية</span>
             </label>
           </div>
@@ -411,15 +415,15 @@ const SettingsPage: React.FC = () => {
         return (
           <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={settings.requireEmailVerification} onChange={(e) => handleFieldChange('requireEmailVerification', e.target.checked)} className="w-5 h-5" />
+              <input id="require-email-verification" name="requireEmailVerification" type="checkbox" checked={settings.requireEmailVerification} onChange={(e) => handleFieldChange('requireEmailVerification', e.target.checked)} className="w-5 h-5" />
               <span>تفعيل التحقق من البريد الإلكتروني للحسابات الجديدة</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={settings.allowGuestCheckout} onChange={(e) => handleFieldChange('allowGuestCheckout', e.target.checked)} className="w-5 h-5" />
+              <input id="allow-guest-checkout" name="allowGuestCheckout" type="checkbox" checked={settings.allowGuestCheckout} onChange={(e) => handleFieldChange('allowGuestCheckout', e.target.checked)} className="w-5 h-5" />
               <span>السماح بالشراء دون إنشاء حساب</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={settings.maintenanceMode} onChange={(e) => handleFieldChange('maintenanceMode', e.target.checked)} className="w-5 h-5" />
+              <input id="maintenance-mode" name="maintenanceMode" type="checkbox" checked={settings.maintenanceMode} onChange={(e) => handleFieldChange('maintenanceMode', e.target.checked)} className="w-5 h-5" />
               <span>تفعيل وضع الصيانة</span>
             </label>
           </div>
@@ -433,14 +437,14 @@ const SettingsPage: React.FC = () => {
                 <label htmlFor="primary-color" className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-2">اللون الأساسي</label>
                 <div className="flex items-center gap-3">
                   <input id="primary-color" type="color" value={settings.theme.primaryColor} onChange={(e) => handleFieldChange('theme', { ...settings.theme, primaryColor: e.target.value })} className="w-12 h-12 rounded-xl border border-white/10" />
-                  <input type="text" value={settings.theme.primaryColor} onChange={(e) => handleFieldChange('theme', { ...settings.theme, primaryColor: e.target.value })} className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  <input id="primary-color-value" name="themePrimaryColor" type="text" value={settings.theme.primaryColor} onChange={(e) => handleFieldChange('theme', { ...settings.theme, primaryColor: e.target.value })} className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500" />
                 </div>
               </div>
               <div>
                 <label htmlFor="secondary-color" className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-2">اللون الثانوي</label>
                 <div className="flex items-center gap-3">
                   <input id="secondary-color" type="color" value={settings.theme.secondaryColor} onChange={(e) => handleFieldChange('theme', { ...settings.theme, secondaryColor: e.target.value })} className="w-12 h-12 rounded-xl border border-white/10" />
-                  <input type="text" value={settings.theme.secondaryColor} onChange={(e) => handleFieldChange('theme', { ...settings.theme, secondaryColor: e.target.value })} className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  <input id="secondary-color-value" name="themeSecondaryColor" type="text" value={settings.theme.secondaryColor} onChange={(e) => handleFieldChange('theme', { ...settings.theme, secondaryColor: e.target.value })} className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500" />
                 </div>
               </div>
               <div>
@@ -495,12 +499,12 @@ const SettingsPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-3 rounded-xl font-black text-sm transition-all ${activeTab === tab.id ? 'bg-amber-500 text-gray-900' : 'bg-white/5 text-gray-300 hover:text-white border border-white/10'}`}
+            className={`shrink-0 px-6 py-3 rounded-xl font-black text-sm transition-all ${activeTab === tab.id ? 'bg-amber-500 text-gray-900' : 'bg-white/5 text-gray-300 hover:text-white border border-white/10'}`}
           >
             <span className="ml-2">{tab.icon}</span>
             {tab.label}
@@ -508,7 +512,7 @@ const SettingsPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="glass-medium rounded-2xl border border-white/10 p-8 min-h-[420px]">
+      <div className="glass-medium rounded-2xl border border-white/10 p-5 sm:p-8 min-h-[420px]">
         {isLoading ? <div className="text-center text-gray-400 font-bold py-20">جاري تحميل الإعدادات...</div> : renderTabContent()}
       </div>
     </div>

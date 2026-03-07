@@ -140,6 +140,8 @@ const ShowcasePage: React.FC<ShowcasePageProps> = ({ setPage }) => {
                          <div className="glass-light border border-white/10 rounded-2xl py-3.5 px-6 flex items-center gap-4 cursor-pointer hover:border-amber-500/50 transition-all min-w-[200px] shadow-lg">
                             <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">ترتيب حسب:</span>
                             <select 
+                                id="showcase-sort"
+                                name="showcaseSort"
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                                 className="bg-transparent border-none outline-none font-black text-sm text-white appearance-none cursor-pointer flex-1"

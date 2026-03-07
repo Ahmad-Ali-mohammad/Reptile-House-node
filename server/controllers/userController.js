@@ -58,3 +58,24 @@ export async function update(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+export async function remove(req, res) {
+  try {
+    const user = await UserModel.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
+
+    if (user.role === 'admin') {
+      const users = await UserModel.findAll();
+      const adminCount = users.filter((row) => row.role === 'admin').length;
+      if (adminCount <= 1) {
+        return res.status(400).json({ error: 'لا يمكن حذف آخر حساب مسؤول في النظام' });
+      }
+    }
+
+    const ok = await UserModel.remove(req.params.id);
+    if (!ok) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}

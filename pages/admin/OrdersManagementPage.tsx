@@ -129,6 +129,8 @@ const OrdersManagementPage: React.FC = () => {
 
   const renderStatusSelect = (order: Order, status: Order['status'], compact = false) => (
     <select
+      id={`order-status-${order.id}${compact ? '-compact' : '-full'}`}
+      name={`orderStatus-${order.id}${compact ? '-compact' : '-full'}`}
       value={status}
       onChange={(event) => handleStatusChange(order, event.target.value as Order['status'])}
       className={`w-full appearance-none rounded-2xl border px-4 py-3 text-center font-black transition-all focus:ring-2 focus:ring-amber-500/50 ${

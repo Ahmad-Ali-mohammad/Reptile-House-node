@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SeoSettings } from '../../types';
 import { api } from '../../services/api';
 import { CheckCircleIcon, DocumentIcon } from '../../components/icons';
@@ -64,7 +64,7 @@ const SeoManagementPage: React.FC = () => {
     try {
       const payload = { ...defaultSeo, ...settings };
       const savedRow = await api.saveSeoSettings(payload);
-        setSettings({ ...defaultSeo, ...savedRow });
+      setSettings({ ...defaultSeo, ...savedRow });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {
@@ -76,88 +76,117 @@ const SeoManagementPage: React.FC = () => {
 
   const snippetTitle = `${settings.defaultTitle} ${settings.titleSeparator} ${settings.siteName}`.trim();
 
+  const renderInput = (id: string, label: string, value: string, onChange: (value: string) => void, type = 'text') => (
+    <div>
+      <label htmlFor={id} className="mb-2 block text-sm font-black text-gray-400">{label}</label>
+      <input
+        id={id}
+        name={id}
+        type={type}
+        className="w-full rounded-xl border border-white/10 bg-[#1a1c23] px-4 py-3 text-white"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+
+  const renderTextarea = (id: string, label: string, value: string, onChange: (value: string) => void, rows: number) => (
+    <div>
+      <label htmlFor={id} className="mb-2 block text-sm font-black text-gray-400">{label}</label>
+      <textarea
+        id={id}
+        name={id}
+        className="min-h-[90px] w-full rounded-xl border border-white/10 bg-[#1a1c23] px-4 py-3 text-white"
+        rows={rows}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+
   return (
     <div className="animate-fade-in relative space-y-8 text-right">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h1 className="text-4xl font-black mb-2">لوحة تحسين محركات البحث</h1>
-          <p className="text-gray-400">إدارة العناوين والوصف والوسوم ومحركات البحث وخرائط الموقع من مكان واحد.</p>
+          <p className="text-gray-400">إدارة العناوين والوصف والوسوم والتحقق ومحركات البحث من مصدر بيانات حقيقي.</p>
         </div>
         <button
           onClick={handleSave}
           disabled={isSaving || isLoading}
-          className="bg-amber-500 text-gray-900 font-black py-3 px-6 rounded-2xl hover:bg-amber-400 disabled:opacity-60"
+          className="rounded-2xl bg-amber-500 px-6 py-3 font-black text-gray-900 hover:bg-amber-400 disabled:opacity-60"
         >
           {isSaving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
         </button>
       </div>
 
       {saved && (
-        <div className="bg-green-500/10 border border-green-500/40 text-green-300 rounded-2xl p-4 text-sm font-bold flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-2xl border border-green-500/40 bg-green-500/10 p-4 text-sm font-bold text-green-300">
           <CheckCircleIcon className="w-5 h-5" />
           تم حفظ إعدادات تحسين محركات البحث بنجاح.
         </div>
       )}
-      {error && <div className="bg-red-500/10 border border-red-500/40 text-red-300 rounded-2xl p-4 text-sm font-bold">{error}</div>}
+      {error && <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm font-bold text-red-300">{error}</div>}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 glass-dark border border-white/10 rounded-[2rem] p-6 space-y-6">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <div className="glass-dark rounded-[2rem] border border-white/10 p-5 space-y-6 sm:p-6">
           <h2 className="text-xl font-black text-amber-400">إعدادات عامة</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="اسم الموقع" value={settings.siteName} onChange={(e) => setSettings({ ...settings, siteName: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="عنوان افتراضي" value={settings.defaultTitle} onChange={(e) => setSettings({ ...settings, defaultTitle: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="فاصل العنوان" value={settings.titleSeparator} onChange={(e) => setSettings({ ...settings, titleSeparator: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="الرابط الأساسي canonical" value={settings.canonicalBaseUrl} onChange={(e) => setSettings({ ...settings, canonicalBaseUrl: e.target.value })} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {renderInput('seo-site-name', 'اسم الموقع', settings.siteName, (value) => setSettings({ ...settings, siteName: value }))}
+            {renderInput('seo-default-title', 'العنوان الافتراضي', settings.defaultTitle, (value) => setSettings({ ...settings, defaultTitle: value }))}
+            {renderInput('seo-title-separator', 'فاصل العنوان', settings.titleSeparator, (value) => setSettings({ ...settings, titleSeparator: value }))}
+            {renderInput('seo-canonical-base-url', 'الرابط الأساسي canonical', settings.canonicalBaseUrl, (value) => setSettings({ ...settings, canonicalBaseUrl: value }), 'url')}
           </div>
-          <textarea className="w-full bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3 min-h-[90px]" placeholder="الوصف الافتراضي" value={settings.defaultDescription} onChange={(e) => setSettings({ ...settings, defaultDescription: e.target.value })} />
-          <textarea className="w-full bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3 min-h-[70px]" placeholder="الكلمات المفتاحية (مفصولة بفواصل)" value={settings.defaultKeywords} onChange={(e) => setSettings({ ...settings, defaultKeywords: e.target.value })} />
+          {renderTextarea('seo-default-description', 'الوصف الافتراضي', settings.defaultDescription, (value) => setSettings({ ...settings, defaultDescription: value }), 4)}
+          {renderTextarea('seo-default-keywords', 'الكلمات المفتاحية', settings.defaultKeywords, (value) => setSettings({ ...settings, defaultKeywords: value }), 3)}
 
-          <h2 className="text-xl font-black text-amber-400 pt-4">إعدادات OpenGraph وX (Twitter)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="صورة OG الافتراضية" value={settings.defaultOgImage} onChange={(e) => setSettings({ ...settings, defaultOgImage: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="معرّف X (@...)" value={settings.twitterHandle} onChange={(e) => setSettings({ ...settings, twitterHandle: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="اللغة المحلية (ar_SY)" value={settings.locale} onChange={(e) => setSettings({ ...settings, locale: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="لون السمة (#...)" value={settings.themeColor} onChange={(e) => setSettings({ ...settings, themeColor: e.target.value })} />
+          <h2 className="text-xl font-black text-amber-400 pt-4">OpenGraph وX</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {renderInput('seo-default-og-image', 'صورة OG الافتراضية', settings.defaultOgImage, (value) => setSettings({ ...settings, defaultOgImage: value }), 'url')}
+            {renderInput('seo-twitter-handle', 'معرّف X (@...)', settings.twitterHandle, (value) => setSettings({ ...settings, twitterHandle: value }))}
+            {renderInput('seo-locale', 'اللغة المحلية', settings.locale, (value) => setSettings({ ...settings, locale: value }))}
+            {renderInput('seo-theme-color', 'لون السمة', settings.themeColor, (value) => setSettings({ ...settings, themeColor: value }))}
           </div>
 
-          <h2 className="text-xl font-black text-amber-400 pt-4">فهرسة ومحركات بحث</h2>
-          <div className="flex flex-wrap gap-6">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={settings.robotsIndex} onChange={(e) => setSettings({ ...settings, robotsIndex: e.target.checked })} />
-              <span>السماح بالأرشفة (index)</span>
+          <h2 className="text-xl font-black text-amber-400 pt-4">الفهرسة والتحقق</h2>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <input id="seo-robots-index" name="seoRobotsIndex" type="checkbox" checked={settings.robotsIndex} onChange={(e) => setSettings({ ...settings, robotsIndex: e.target.checked })} />
+              <span>السماح بالأرشفة</span>
             </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={settings.robotsFollow} onChange={(e) => setSettings({ ...settings, robotsFollow: e.target.checked })} />
-              <span>السماح باتباع الروابط (follow)</span>
+            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <input id="seo-robots-follow" name="seoRobotsFollow" type="checkbox" checked={settings.robotsFollow} onChange={(e) => setSettings({ ...settings, robotsFollow: e.target.checked })} />
+              <span>اتباع الروابط</span>
             </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={settings.sitemapEnabled} onChange={(e) => setSettings({ ...settings, sitemapEnabled: e.target.checked })} />
-              <span>تفعيل خريطة الموقع sitemap.xml</span>
+            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <input id="seo-sitemap-enabled" name="seoSitemapEnabled" type="checkbox" checked={settings.sitemapEnabled} onChange={(e) => setSettings({ ...settings, sitemapEnabled: e.target.checked })} />
+              <span>تفعيل sitemap</span>
             </label>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="رمز التحقق من Google" value={settings.googleVerification} onChange={(e) => setSettings({ ...settings, googleVerification: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="رمز التحقق من Bing" value={settings.bingVerification} onChange={(e) => setSettings({ ...settings, bingVerification: e.target.value })} />
-            <input className="bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3" placeholder="رمز التحقق من Yandex" value={settings.yandexVerification} onChange={(e) => setSettings({ ...settings, yandexVerification: e.target.value })} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {renderInput('seo-google-verification', 'رمز Google', settings.googleVerification, (value) => setSettings({ ...settings, googleVerification: value }))}
+            {renderInput('seo-bing-verification', 'رمز Bing', settings.bingVerification, (value) => setSettings({ ...settings, bingVerification: value }))}
+            {renderInput('seo-yandex-verification', 'رمز Yandex', settings.yandexVerification, (value) => setSettings({ ...settings, yandexVerification: value }))}
           </div>
-          <textarea className="w-full bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3 min-h-[70px]" placeholder="مسارات مستثناة من الأرشفة (سطر لكل مسار)" value={settings.excludedPaths} onChange={(e) => setSettings({ ...settings, excludedPaths: e.target.value })} />
-          <textarea className="w-full bg-[#1a1c23] border border-white/10 rounded-xl px-4 py-3 min-h-[100px]" placeholder="إضافات robots.txt مخصصة" value={settings.customRobotsTxt} onChange={(e) => setSettings({ ...settings, customRobotsTxt: e.target.value })} />
+          {renderTextarea('seo-excluded-paths', 'مسارات مستثناة من الأرشفة', settings.excludedPaths, (value) => setSettings({ ...settings, excludedPaths: value }), 3)}
+          {renderTextarea('seo-custom-robots', 'إضافات robots.txt مخصصة', settings.customRobotsTxt, (value) => setSettings({ ...settings, customRobotsTxt: value }), 4)}
         </div>
 
-        <div className="glass-dark border border-white/10 rounded-[2rem] p-6 space-y-4">
-          <h3 className="text-lg font-black text-amber-400 flex items-center gap-2">
+        <div className="glass-dark rounded-[2rem] border border-white/10 p-5 space-y-4 sm:p-6">
+          <h3 className="flex items-center gap-2 text-lg font-black text-amber-400">
             <DocumentIcon className="w-5 h-5" />
             معاينة نتيجة البحث
           </h3>
-          <div className="bg-[#11131a] border border-white/10 rounded-2xl p-4 space-y-2">
-            <p className="text-[#8ab4f8] text-lg leading-snug">{snippetTitle}</p>
-            <p className="text-[#9aa0a6] text-sm truncate">{settings.canonicalBaseUrl}</p>
-            <p className="text-[#bdc1c6] text-sm leading-relaxed">{settings.defaultDescription}</p>
+          <div className="rounded-2xl border border-white/10 bg-[#11131a] p-4 space-y-2">
+            <p className="text-lg leading-snug text-[#8ab4f8]">{snippetTitle}</p>
+            <p className="truncate text-sm text-[#9aa0a6]">{settings.canonicalBaseUrl}</p>
+            <p className="text-sm leading-relaxed text-[#bdc1c6]">{settings.defaultDescription}</p>
           </div>
-          <div className="text-xs text-gray-500 leading-6">
+          <div className="space-y-2 text-xs leading-6 text-gray-500">
             <p>الروبوتات: {settings.robotsIndex ? 'index' : 'noindex'}, {settings.robotsFollow ? 'follow' : 'nofollow'}</p>
             <p>خريطة الموقع: {settings.sitemapEnabled ? 'مفعلة' : 'معطلة'}</p>
             <p>الرابط الأساسي: {settings.canonicalBaseUrl}</p>
+            <p>OG image: {settings.defaultOgImage}</p>
           </div>
         </div>
       </div>
@@ -166,4 +195,3 @@ const SeoManagementPage: React.FC = () => {
 };
 
 export default SeoManagementPage;
-

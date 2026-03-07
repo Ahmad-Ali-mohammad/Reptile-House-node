@@ -333,6 +333,8 @@ const FiltersManagementPage: React.FC = () => {
                                     اسم المجموعة <span className="text-red-500">*</span>
                                 </label>
                                 <input
+                                    id="filter-group-name"
+                                    name="filterGroupName"
                                     required
                                     className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white font-bold"
                                     value={editingGroup?.name || ''}
@@ -396,6 +398,8 @@ const FiltersManagementPage: React.FC = () => {
                                         <div key={option.id} className="flex gap-3 items-start bg-[#1a1c23] p-4 rounded-xl border border-white/10">
                                             <div className="flex-1 space-y-3">
                                                 <input
+                                                    id={`filter-option-name-${option.id || index}`}
+                                                    name={`filterOptionName-${option.id || index}`}
                                                     type="text"
                                                     placeholder="اسم الخيار"
                                                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white text-sm"
@@ -403,6 +407,8 @@ const FiltersManagementPage: React.FC = () => {
                                                     onChange={e => handleUpdateOption(index, 'name', e.target.value)}
                                                 />
                                                 <input
+                                                    id={`filter-option-value-${option.id || index}`}
+                                                    name={`filterOptionValue-${option.id || index}`}
                                                     type="text"
                                                     placeholder="القيمة (value)"
                                                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white text-sm"
@@ -411,6 +417,8 @@ const FiltersManagementPage: React.FC = () => {
                                                 />
                                                 <label className="flex items-center gap-2">
                                                     <input
+                                                        id={`filter-option-active-${option.id || index}`}
+                                                        name={`filterOptionActive-${option.id || index}`}
                                                         type="checkbox"
                                                         checked={option.isActive}
                                                         onChange={e => handleUpdateOption(index, 'isActive', e.target.checked)}
@@ -436,6 +444,8 @@ const FiltersManagementPage: React.FC = () => {
                             <div>
                                 <label className="flex items-center gap-3 cursor-pointer">
                                     <input
+                                        id="filter-group-active"
+                                        name="filterGroupActive"
                                         type="checkbox"
                                         checked={editingGroup?.isActive !== false}
                                         onChange={e => setEditingGroup({ ...editingGroup, isActive: e.target.checked })}

@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import router from './routes/index.js';
 import { ensureMediaRoot, uploadsRoot } from './utils/mediaStorage.js';
+import { startBackupScheduler } from './utils/backupService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -129,6 +130,7 @@ app.listen(PORT, () => {
   if (isProduction && fs.existsSync(frontendDistPath)) {
     console.log(`[server] Serving frontend build from ${frontendDistPath}`);
   }
+  startBackupScheduler();
 });
 
 export default app;

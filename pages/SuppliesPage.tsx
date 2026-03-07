@@ -157,6 +157,8 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
                     {/* Sort Dropdown */}
                     <div className="relative group">
                         <select 
+                            id="supplies-sort"
+                            name="suppliesSort"
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as SortOption)}
                             className="glass-light border border-white/10 px-5 py-3 rounded-2xl text-white font-bold appearance-none cursor-pointer hover:border-amber-500/50 hover:bg-amber-500/5 transition-all shadow-lg text-sm pr-12 bg-none"

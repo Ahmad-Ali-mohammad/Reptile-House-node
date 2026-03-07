@@ -77,6 +77,8 @@ const BlogManagementPage: React.FC = () => {
             <div className="flex gap-4 w-full md:w-auto">
                 <div className="relative flex-1 md:w-80">
                     <input
+                        id="blog-search"
+                        name="blogSearch"
                         type="text"
                         placeholder="بحث في المقالات..."
                         value={searchTerm}
@@ -181,7 +183,7 @@ const BlogManagementPage: React.FC = () => {
                                             </div>
                                         ) : null}
                                     </div>
-                                    <input ref={fileInputRef} type="file" accept={IMAGE_FILE_ACCEPT} className="hidden" onChange={handleImageChange} />
+                                    <input id="article-image-upload" name="articleImageUpload" ref={fileInputRef} type="file" accept={IMAGE_FILE_ACCEPT} className="hidden" onChange={handleImageChange} />
                                 </div>
                                 <div>
                                     <label htmlFor="article-image" className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 block">رابط الصورة (من مكتبة الوسائط)</label>
@@ -222,5 +224,4 @@ const BlogManagementPage: React.FC = () => {
 };
 
 export default BlogManagementPage;
-
 

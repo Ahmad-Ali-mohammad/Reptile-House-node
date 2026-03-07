@@ -284,11 +284,11 @@ export default function ServicesManagementPage() {
   };
 
   return (
-    <div className="min-h-screen px-6 pb-32">
-      <div className="mb-12 flex items-center justify-between gap-4">
+    <div className="min-h-screen px-4 pb-24 sm:px-6 sm:pb-32">
+      <div className="mb-10 flex flex-col gap-4 sm:mb-12 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-5xl font-black">إدارة الخدمات</h1>
-          <p className="mt-3 text-lg text-gray-400">
+          <h1 className="text-3xl font-black sm:text-4xl lg:text-5xl">إدارة الخدمات</h1>
+          <p className="mt-3 text-sm leading-relaxed text-gray-400 sm:text-base lg:text-lg">
             أي خدمة تُنشر هنا تظهر مباشرة في صفحة الخدمات بالواجهة الأمامية حسب ترتيبها.
           </p>
         </div>
@@ -316,9 +316,11 @@ export default function ServicesManagementPage() {
 
       <TabsSystem tabs={tabs} activeTabId={activeTab} onChange={setActiveTab} />
 
-      <div className="mt-8 mb-8 flex flex-wrap items-center gap-4">
-        <div className="relative min-w-[300px] flex-1">
+      <div className="mt-8 mb-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative min-w-0 flex-1 sm:min-w-[260px]">
           <input
+            id="service-search"
+            name="serviceSearch"
             type="text"
             placeholder="ابحث عن خدمة..."
             value={searchQuery}
@@ -351,7 +353,92 @@ export default function ServicesManagementPage() {
             لا توجد خدمات تطابق الفلتر الحالي.
           </div>
         ) : (
-          <div className="overflow-x-auto custom-scrollbar">
+          <>
+          <div className="space-y-4 p-4 lg:hidden">
+            {filteredServices.map((service, index) => (
+              <article key={service.id} className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4">
+                <div className="flex items-start gap-4">
+                  <img
+                    src={service.imageUrl || '/placeholder.svg'}
+                    alt={service.title}
+                    className="h-20 w-20 rounded-2xl border border-white/10 object-cover shrink-0"
+                    loading="lazy"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-lg font-black text-white truncate">{service.title}</p>
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-400">{service.description}</p>
+                      </div>
+                      <span className="text-3xl shrink-0">{service.icon || '🦎'}</span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">السعر</p>
+                        <p className="mt-1 font-black text-amber-400">{formatPriceLabel(service.price)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">الترتيب</p>
+                        <p className="mt-1 font-black text-white">{service.sortOrder}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => handleTogglePublish(service)}
+                    className={`rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                      service.isPublished
+                        ? 'border-green-500/20 bg-green-500/10 text-green-400'
+                        : 'border-gray-500/20 bg-gray-500/10 text-gray-400'
+                    }`}
+                  >
+                    {service.isPublished ? 'منشورة' : 'مسودة'}
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleReorder(index, index - 1)}
+                      disabled={!canReorder || index === 0}
+                      className="rounded-lg bg-white/5 p-2 text-gray-400 transition-all hover:bg-amber-400/10 hover:text-amber-400 disabled:opacity-30"
+                      aria-label={`نقل ${service.title} للأعلى`}
+                    >
+                      <ChevronUpIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleReorder(index, index + 1)}
+                      disabled={!canReorder || index === filteredServices.length - 1}
+                      className="rounded-lg bg-white/5 p-2 text-gray-400 transition-all hover:bg-amber-400/10 hover:text-amber-400 disabled:opacity-30"
+                      aria-label={`نقل ${service.title} للأسفل`}
+                    >
+                      <ChevronDownIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleOpenModal(service)}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-sm font-bold text-gray-300 transition-all hover:bg-amber-400/10 hover:text-amber-400"
+                  >
+                    <EditIcon className="h-4 w-4" />
+                    <span>تعديل</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(service.id)}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/5 px-4 py-3 text-sm font-bold text-red-300 transition-all hover:bg-red-500 hover:text-white"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                    <span>حذف</span>
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto custom-scrollbar lg:block">
             <table className="w-full text-right">
               <thead>
                 <tr className="bg-black/20 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-white/10">
@@ -440,6 +527,7 @@ export default function ServicesManagementPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
@@ -475,6 +563,8 @@ export default function ServicesManagementPage() {
                 </div>
 
                 <input
+                  id="service-image-upload"
+                  name="serviceImageUpload"
                   ref={fileInputRef}
                   type="file"
                   accept={IMAGE_FILE_ACCEPT}
@@ -487,6 +577,8 @@ export default function ServicesManagementPage() {
                 <div className="sm:col-span-2">
                   <label className="mb-2 block text-xs font-black uppercase text-amber-500">عنوان الخدمة *</label>
                   <input
+                    id="service-title"
+                    name="serviceTitle"
                     required
                     value={editingService.title}
                     onChange={(event) =>
@@ -499,6 +591,8 @@ export default function ServicesManagementPage() {
                 <div className="sm:col-span-2">
                   <label className="mb-2 block text-xs font-black uppercase text-amber-500">وصف الخدمة</label>
                   <textarea
+                    id="service-description"
+                    name="serviceDescription"
                     rows={4}
                     value={editingService.description}
                     onChange={(event) =>
@@ -536,6 +630,8 @@ export default function ServicesManagementPage() {
                 <div>
                   <label className="mb-2 block text-xs font-black uppercase text-amber-500">السعر</label>
                   <input
+                    id="service-price"
+                    name="servicePrice"
                     type="number"
                     min="0"
                     step="0.01"
@@ -558,6 +654,8 @@ export default function ServicesManagementPage() {
                 <div>
                   <label className="mb-2 block text-xs font-black uppercase text-amber-500">ترتيب العرض</label>
                   <input
+                    id="service-sort-order"
+                    name="serviceSortOrder"
                     type="number"
                     min="1"
                     value={editingService.sortOrder}
@@ -578,6 +676,8 @@ export default function ServicesManagementPage() {
                 <div>
                   <label className="mt-8 flex cursor-pointer items-center gap-3">
                     <input
+                      id="service-published"
+                      name="servicePublished"
                       type="checkbox"
                       checked={editingService.isPublished}
                       onChange={(event) =>

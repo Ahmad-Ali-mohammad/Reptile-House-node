@@ -1,7 +1,7 @@
 /**
  * API client for backend (MySQL mode only).
  */
-import type { Reptile, Order, Address, User, Article, HeroSlide, Supply, ShamCashConfig, CompanyInfo, ContactInfo, TeamMember, FilterGroup, PageContent, SeoSettings, MediaItem, MediaFolder, UserPreferences, ServiceItem, DatabaseStatus, MediaUploadResult, StoreSettings } from '../types';
+import type { Reptile, Order, Address, User, Article, HeroSlide, Supply, ShamCashConfig, CompanyInfo, ContactInfo, TeamMember, FilterGroup, PageContent, SeoSettings, MediaItem, MediaFolder, UserPreferences, ServiceItem, DatabaseStatus, MediaUploadResult, StoreSettings, ApiKeyRecord, ApiKeySecretResponse, ApiKeyPermission, BackupRecord, BackupSettings, BackupType } from '../types';
 
 const configuredBase =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL
@@ -57,20 +57,32 @@ function isAbortLikeError(error: unknown): boolean {
   return name === 'AbortError' || /\babort(?:ed)?\b/i.test(message);
 }
 
-function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${BASE}${path}`;
+function getStoredAuthToken(): string {
+  try {
+    return globalThis.localStorage?.getItem(AUTH_TOKEN_STORAGE_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+function buildHeaders(options: RequestInit = {}): Record<string, string> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
   };
+
   if (options.body !== undefined && !(options.body instanceof FormData) && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
-  try {
-    const token = globalThis.localStorage?.getItem(AUTH_TOKEN_STORAGE_KEY);
-    if (token) headers.Authorization = `Bearer ${token}`;
-  } catch {
-    // ignore storage access errors
-  }
+
+  const token = getStoredAuthToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  return headers;
+}
+
+function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const url = `${BASE}${path}`;
+  const headers = buildHeaders(options);
   return fetch(url, {
     ...options,
     headers,
@@ -87,6 +99,35 @@ function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       if (!res.ok) throw new ApiError(data.error || res.statusText, res.status, false);
       return data as T;
     });
+}
+
+async function download(path: string, options: RequestInit = {}): Promise<{ blob: Blob; fileName: string }> {
+  const url = `${BASE}${path}`;
+  const headers = buildHeaders(options);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    if (isAbortLikeError(error)) {
+      throw new ApiError('Request aborted', undefined, false, true);
+    }
+    throw new ApiError((error as Error)?.message || 'Failed to fetch', undefined, true);
+  }
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new ApiError(payload.error || response.statusText, response.status, false);
+  }
+
+  const disposition = response.headers.get('content-disposition') || '';
+  const fileNameMatch = disposition.match(/filename="?([^"]+)"?/i);
+  const fileName = fileNameMatch?.[1] || 'backup.json.gz';
+  const blob = await response.blob();
+  return { blob, fileName };
 }
 
 export const api = {
@@ -137,6 +178,7 @@ export const api = {
 
   getUsers: (options?: ApiRequestOptions): Promise<User[]> => request<User[]>('/api/users', options),
   saveUser: (user: User): Promise<User> => request<User>(`/api/users/${user.id}`, { method: 'PUT', body: JSON.stringify(user) }),
+  deleteUser: (id: string): Promise<void> => request(`/api/users/${id}`, { method: 'DELETE' }),
 
   getOffers: (): Promise<import('../types').PromotionalCard[]> => request<import('../types').PromotionalCard[]>('/api/offers'),
   saveOffer: (offer: import('../types').PromotionalCard): Promise<import('../types').PromotionalCard> =>
@@ -157,6 +199,29 @@ export const api = {
   getStoreSettings: (options?: ApiRequestOptions): Promise<StoreSettings> => request<StoreSettings>('/api/settings/store', options),
   saveStoreSettings: (settings: Partial<StoreSettings>): Promise<StoreSettings> =>
     request<StoreSettings>('/api/settings/store', { method: 'PUT', body: JSON.stringify(settings) }),
+
+  getBackupSettings: (): Promise<BackupSettings> => request<BackupSettings>('/api/backup-settings'),
+  saveBackupSettings: (settings: Partial<BackupSettings>): Promise<BackupSettings> =>
+    request<BackupSettings>('/api/backup-settings', { method: 'PUT', body: JSON.stringify(settings) }),
+  getBackups: (): Promise<BackupRecord[]> => request<BackupRecord[]>('/api/backups'),
+  createBackup: (type: BackupType, description?: string): Promise<BackupRecord> =>
+    request<BackupRecord>('/api/backups', { method: 'POST', body: JSON.stringify({ type, description }) }),
+  restoreBackup: (id: string): Promise<BackupRecord> =>
+    request<BackupRecord>(`/api/backups/${id}/restore`, { method: 'POST' }),
+  deleteBackup: (id: string): Promise<void> =>
+    request(`/api/backups/${id}`, { method: 'DELETE' }),
+  downloadBackup: (id: string): Promise<{ blob: Blob; fileName: string }> =>
+    download(`/api/backups/${id}/download`),
+
+  getApiKeys: (): Promise<ApiKeyRecord[]> => request<ApiKeyRecord[]>('/api/api-keys'),
+  createApiKey: (payload: { name: string; permissions: ApiKeyPermission[]; expiresAt?: string | null }): Promise<ApiKeySecretResponse> =>
+    request<ApiKeySecretResponse>('/api/api-keys', { method: 'POST', body: JSON.stringify(payload) }),
+  updateApiKey: (id: string, payload: { name?: string; permissions?: ApiKeyPermission[]; expiresAt?: string | null; isActive?: boolean }): Promise<ApiKeyRecord> =>
+    request<ApiKeyRecord>(`/api/api-keys/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  regenerateApiKey: (id: string): Promise<ApiKeySecretResponse> =>
+    request<ApiKeySecretResponse>(`/api/api-keys/${id}/regenerate`, { method: 'POST' }),
+  deleteApiKey: (id: string): Promise<void> =>
+    request(`/api/api-keys/${id}`, { method: 'DELETE' }),
 
   getCompanyInfo: (options?: ApiRequestOptions): Promise<CompanyInfo> => request<CompanyInfo>('/api/settings/company', options),
   saveCompanyInfo: (info: CompanyInfo): Promise<CompanyInfo> => request<CompanyInfo>('/api/settings/company', { method: 'PUT', body: JSON.stringify(info) }),

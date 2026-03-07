@@ -174,11 +174,11 @@ const PoliciesManagementPage: React.FC = () => {
                     <h1 className="text-4xl font-black mb-2">إدارة السياسات والضمانات</h1>
                     <p className="text-gray-400">تحكم في سياسات الموقع والضمانات</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                     <HelpButton onClick={() => setIsHelpOpen(true)} />
                     <button
                         onClick={() => handleOpenModal()}
-                        className="flex items-center gap-3 bg-amber-500 text-gray-900 font-black py-3.5 px-8 rounded-2xl hover:bg-amber-400 transition-all shadow-xl shadow-amber-500/20 active:scale-95"
+                        className="flex items-center justify-center gap-3 rounded-2xl bg-amber-500 px-6 py-3.5 font-black text-gray-900 transition-all shadow-xl shadow-amber-500/20 active:scale-95 hover:bg-amber-400"
                     >
                         <PlusIcon className="w-5 h-5" />
                         <span>إضافة سياسة جديدة</span>
@@ -321,7 +321,7 @@ const PoliciesManagementPage: React.FC = () => {
                     ></div>
                     <form
                         onSubmit={handleSave}
-                        className="relative w-full max-w-4xl glass-dark border border-white/10 rounded-[3rem] p-8 md:p-14 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto custom-scrollbar bg-[#0f1117]"
+                        className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[#0f1117] p-5 shadow-2xl animate-scale-in custom-scrollbar sm:p-8 md:rounded-[3rem] md:p-14"
                     >
                         <h2 className="text-4xl font-black mb-10 text-white tracking-tighter">
                             {editingPolicy?.id && policies.find(p => p.id === editingPolicy.id)
@@ -402,6 +402,8 @@ const PoliciesManagementPage: React.FC = () => {
                             <div>
                                 <label className="flex items-center gap-3 cursor-pointer">
                                     <input
+                                        id="policy-active"
+                                        name="policyActive"
                                         type="checkbox"
                                         checked={editingPolicy?.isActive !== false}
                                         onChange={e => setEditingPolicy({ ...editingPolicy, isActive: e.target.checked })}
@@ -412,7 +414,7 @@ const PoliciesManagementPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex gap-6 mt-12">
+                        <div className="mt-12 flex flex-col gap-3 sm:flex-row sm:gap-6">
                             <button
                                 type="submit"
                                 className="flex-1 bg-amber-500 text-gray-900 font-black py-5 rounded-[1.5rem] hover:bg-amber-400 shadow-2xl text-lg"

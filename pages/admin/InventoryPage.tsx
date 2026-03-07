@@ -51,6 +51,8 @@ const InventoryPage: React.FC = () => {
                 </div>
                 <div className="relative w-full md:w-80">
                     <input 
+                        id="inventory-search"
+                        name="inventorySearch"
                         type="text" 
                         placeholder="بحث سريع في المخزون..." 
                         value={searchTerm}

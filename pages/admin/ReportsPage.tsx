@@ -374,6 +374,8 @@ const ReportsPage: React.FC = () => {
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-400">الفترة</label>
             <select
+              id="report-period"
+              name="reportPeriod"
               value={selectedPeriod}
               onChange={(event) => setSelectedPeriod(event.target.value as PeriodValue)}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-amber-500/50"
@@ -389,6 +391,8 @@ const ReportsPage: React.FC = () => {
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-400">من</label>
             <input
+              id="report-start-date"
+              name="reportStartDate"
               type="date"
               value={dateRange.start}
               onChange={(event) => setDateRange((current) => ({ ...current, start: event.target.value }))}
@@ -400,6 +404,8 @@ const ReportsPage: React.FC = () => {
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-400">إلى</label>
             <input
+              id="report-end-date"
+              name="reportEndDate"
               type="date"
               value={dateRange.end}
               onChange={(event) => setDateRange((current) => ({ ...current, end: event.target.value }))}

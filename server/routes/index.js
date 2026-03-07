@@ -20,7 +20,9 @@ import * as mediaFolderController from '../controllers/mediaFolderController.js'
 import * as userPreferencesController from '../controllers/userPreferencesController.js';
 import * as serviceController from '../controllers/serviceController.js';
 import * as systemController from '../controllers/systemController.js';
-import { requireAuth, requireRoles } from '../middleware/auth.js';
+import * as apiKeyController from '../controllers/apiKeyController.js';
+import * as backupController from '../controllers/backupController.js';
+import { attachApiKey, requireAuth, requireRoles } from '../middleware/auth.js';
 import { MAX_UPLOAD_BYTES } from '../utils/mediaStorage.js';
 
 const router = Router();
@@ -36,10 +38,13 @@ router.post('/auth/login', authController.login);
 router.post('/auth/register', authController.register);
 router.post('/auth/bootstrap-admin', authController.bootstrapAdmin);
 
+router.use(attachApiKey);
+
 // Users
 router.get('/users', requireRoles(...manageRoles), userController.list);
 router.get('/users/:id', requireAuth, userController.get);
 router.put('/users/:id', requireAuth, userController.update);
+router.delete('/users/:id', requireRoles(...manageRoles), userController.remove);
 
 // Products
 router.get('/products', productController.list);
@@ -166,6 +171,22 @@ router.delete('/media-folders/:id', requireRoles(...editorRoles), mediaFolderCon
 // User preferences
 router.get('/user-preferences', requireAuth, userPreferencesController.get);
 router.put('/user-preferences', requireAuth, userPreferencesController.update);
+
+// API keys
+router.get('/api-keys', requireRoles(...manageRoles), apiKeyController.list);
+router.post('/api-keys', requireRoles(...manageRoles), apiKeyController.create);
+router.put('/api-keys/:id', requireRoles(...manageRoles), apiKeyController.update);
+router.delete('/api-keys/:id', requireRoles(...manageRoles), apiKeyController.remove);
+router.post('/api-keys/:id/regenerate', requireRoles(...manageRoles), apiKeyController.regenerate);
+
+// Backups
+router.get('/backup-settings', requireRoles(...manageRoles), backupController.getSettings);
+router.put('/backup-settings', requireRoles(...manageRoles), backupController.setSettings);
+router.get('/backups', requireRoles(...manageRoles), backupController.list);
+router.post('/backups', requireRoles(...manageRoles), backupController.create);
+router.post('/backups/:id/restore', requireRoles(...manageRoles), backupController.restore);
+router.get('/backups/:id/download', requireRoles(...manageRoles), backupController.download);
+router.delete('/backups/:id', requireRoles(...manageRoles), backupController.remove);
 
 // System
 router.get('/system/db-status', requireRoles(...manageRoles), systemController.getDatabaseStatus);

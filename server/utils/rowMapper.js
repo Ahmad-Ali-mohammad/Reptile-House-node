@@ -10,13 +10,16 @@ const BOOLEAN_KEYS = new Set([
   'is_available',
   'is_active',
   'is_default',
+  'is_automatic',
   'active',
+  'enabled',
   'robots_index',
   'robots_follow',
   'sitemap_enabled',
   'enable_notifications',
   'enable_email_notifications',
   'enable_sms_notifications',
+  'notifications_enabled',
   'maintenance_mode',
   'allow_guest_checkout',
   'require_email_verification',
@@ -33,8 +36,22 @@ const NUMERIC_KEYS = new Set([
   'tax_rate',
   'shipping_fee',
   'free_shipping_threshold',
+  'usage_count',
+  'size_bytes',
+  'day_of_week',
+  'day_of_month',
+  'retention_count',
   'sort_order',
   'quantity',
+]);
+
+const JSON_KEYS = new Set([
+  'specifications',
+  'reviews',
+  'social_media',
+  'permissions',
+  'scope',
+  'included_scopes',
 ]);
 
 export function rowToCamel(row) {
@@ -51,6 +68,16 @@ export function rowToCamel(row) {
       const nextValue = Number(v);
       out[key] = Number.isNaN(nextValue) ? v : nextValue;
       continue;
+    }
+
+    if (JSON_KEYS.has(k) && typeof v === 'string') {
+      try {
+        out[key] = JSON.parse(v);
+        continue;
+      } catch {
+        out[key] = v;
+        continue;
+      }
     }
 
     out[key] = v;

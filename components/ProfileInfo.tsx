@@ -81,7 +81,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                              <span className="text-[10px] text-white font-black uppercase">تغيير</span>
                         </div>
                     </div>
-                    <input type="file" ref={fileInputRef} className="hidden" accept={IMAGE_FILE_ACCEPT} onChange={handleFileChange} />
+                    <input id="profile-avatar-upload" name="profileAvatarUpload" type="file" ref={fileInputRef} className="hidden" accept={IMAGE_FILE_ACCEPT} onChange={handleFileChange} />
                 </div>
 
                 {/* Form Fields */}
@@ -90,6 +90,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                         <div>
                             <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">الاسم الكامل</label>
                             <input 
+                                id="profile-name"
+                                name="profileName"
                                 required
                                 type="text" 
                                 value={name} 
@@ -100,6 +102,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                         <div>
                             <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">البريد الإلكتروني</label>
                             <input 
+                                id="profile-email"
+                                name="profileEmail"
                                 required
                                 type="email" 
                                 value={email} 
@@ -111,6 +115,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                     <div>
                         <label className="block text-xs font-black text-amber-500 uppercase tracking-widest mb-2">كلمة المرور الحالية</label>
                         <input 
+                            id="profile-current-password"
+                            name="profileCurrentPassword"
                             type="password" 
                             placeholder="********" 
                             className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-amber-500/50 outline-none text-right" 
@@ -132,4 +138,3 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
 }
 
 export default ProfileInfo;
-

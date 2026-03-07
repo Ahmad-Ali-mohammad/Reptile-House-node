@@ -150,6 +150,8 @@ const SuppliesManagementPage: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="relative flex-1 w-full max-w-md">
                     <input
+                        id="supply-search"
+                        name="supplySearch"
                         type="text"
                         placeholder="ابحث في المستلزمات..."
                         value={searchQuery}
@@ -357,4 +359,3 @@ const SuppliesManagementPage: React.FC = () => {
 };
 
 export default SuppliesManagementPage;
-

@@ -131,6 +131,7 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  createdAt?: string;
   passwordHash?: string;
   passwordSalt?: string;
 }
@@ -294,7 +295,65 @@ export interface ContactInfo {
     instagram?: string;
     whatsapp?: string;
     telegram?: string;
+    twitter?: string;
+    youtube?: string;
   };
+}
+
+export type ApiKeyPermission = 'read' | 'write' | 'delete';
+
+export interface ApiKeyRecord {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  maskedKey: string;
+  permissions: ApiKeyPermission[];
+  createdAt: string;
+  lastUsedAt?: string | null;
+  usageCount: number;
+  isActive: boolean;
+  expiresAt?: string | null;
+  createdBy?: string | null;
+}
+
+export interface ApiKeySecretResponse {
+  apiKey: ApiKeyRecord;
+  secret: string;
+}
+
+export type BackupType = 'full' | 'products' | 'orders' | 'customers' | 'settings';
+
+export interface BackupRecord {
+  id: string;
+  name: string;
+  type: BackupType;
+  status: 'completed' | 'in_progress' | 'failed';
+  description: string;
+  fileName?: string | null;
+  sizeBytes: number;
+  sizeLabel: string;
+  scope: string[];
+  isAutomatic: boolean;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  restoredAt?: string | null;
+  restoreStatus?: 'completed' | 'failed' | null;
+  restoreError?: string | null;
+}
+
+export interface BackupSettings {
+  enabled: boolean;
+  frequency: 'weekly' | 'biweekly' | 'monthly';
+  timeOfDay: string;
+  dayOfWeek: number;
+  dayOfMonth: number;
+  retentionCount: number;
+  includedScopes: string[];
+  lastRunAt?: string | null;
+  lastStatus: 'idle' | 'running' | 'completed' | 'failed' | 'paused';
+  lastError?: string;
+  nextRunAt?: string | null;
 }
 
 export interface StoreSettings {

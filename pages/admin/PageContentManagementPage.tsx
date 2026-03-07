@@ -435,6 +435,8 @@ const PageContentManagementPage: React.FC = () => {
               <div className="md:col-span-2">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
+                    id="cms-page-active"
+                    name="cmsPageActive"
                     type="checkbox"
                     checked={editingItem.isActive}
                     onChange={(e) => setEditingItem({ ...editingItem, isActive: e.target.checked })}

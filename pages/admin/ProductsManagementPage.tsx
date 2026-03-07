@@ -160,6 +160,8 @@ const ProductsManagementPage: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="relative flex-1 w-full max-w-md">
                     <input
+                        id="product-search"
+                        name="productSearch"
                         type="text"
                         placeholder="ابحث في المتجر..."
                         value={searchQuery}

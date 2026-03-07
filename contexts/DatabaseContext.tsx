@@ -212,7 +212,7 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const deleteUser = (_id: string) => {
-    refreshData();
+    api.deleteUser(_id).then(() => refreshData()).catch(console.error);
   };
 
   const addSupply = (supply: Supply) => {
