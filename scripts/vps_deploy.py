@@ -7,6 +7,7 @@ import json
 import os
 import posixpath
 import shlex
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -42,6 +43,9 @@ def die(message: str, code: int = 1) -> "NoReturn":
 
 
 def run_local(command: list[str], *, capture: bool = False) -> str:
+    executable = command[0]
+    if os.name == "nt" and shutil.which(executable) is None and shutil.which(f"{executable}.cmd"):
+        command = [f"{executable}.cmd", *command[1:]]
     result = subprocess.run(
         command,
         cwd=ROOT,
