@@ -3,6 +3,7 @@ import { CompanyInfo, TeamMember, PageContent } from '../types';
 import { api } from '../services/api';
 import { usePageContent } from '../hooks/usePageContent';
 import PageNotAvailable from '../components/PageNotAvailable';
+import { pickMeaningfulText, looksCorruptedText } from '../utils/contentText';
 
 const aboutFallback: PageContent = {
   id: 'fallback-about',
@@ -42,15 +43,6 @@ const defaultTeamMember: TeamMember = {
   isActive: true,
 };
 
-const looksCorruptedText = (value?: string | null) => {
-  const text = String(value || '').trim();
-  if (!text) return true;
-  const matches = text.match(/\?/g);
-  return Boolean(matches && matches.length >= Math.max(3, Math.floor(text.length * 0.2)));
-};
-
-const pickText = (value: string | undefined | null, fallback: string) => (looksCorruptedText(value) ? fallback : String(value || fallback));
-
 const AboutPage: React.FC = () => {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -58,16 +50,29 @@ const AboutPage: React.FC = () => {
   const { pageContent: aboutContent, isActive } = usePageContent('about', aboutFallback);
 
   useEffect(() => {
-    Promise.all([api.getCompanyInfo(), api.getTeamMembers()])
+    const controller = new AbortController();
+
+    Promise.all([
+      api.getCompanyInfo({ signal: controller.signal }),
+      api.getTeamMembers({ signal: controller.signal }),
+    ])
       .then(([info, members]) => {
+        if (controller.signal.aborted) return;
         setCompanyInfo(info);
         setTeamMembers(members.filter((member) => member.isActive));
       })
       .catch(() => {
+        if (controller.signal.aborted) return;
         setCompanyInfo(null);
         setTeamMembers([]);
       })
-      .finally(() => setCompanyLoading(false));
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setCompanyLoading(false);
+        }
+      });
+
+    return () => controller.abort();
   }, []);
 
   const safeCompanyInfo = useMemo<CompanyInfo>(() => {
@@ -75,25 +80,25 @@ const AboutPage: React.FC = () => {
     return {
       ...defaultCompanyInfo,
       ...source,
-      name: pickText(source.name, defaultCompanyInfo.name),
-      nameEnglish: pickText(source.nameEnglish, defaultCompanyInfo.nameEnglish),
-      description: pickText(source.description, defaultCompanyInfo.description),
-      mission: pickText(source.mission, defaultCompanyInfo.mission),
-      vision: pickText(source.vision, defaultCompanyInfo.vision),
-      story: pickText(source.story, defaultCompanyInfo.story),
-      logoUrl: pickText(source.logoUrl, defaultCompanyInfo.logoUrl),
-      mascotUrl: pickText(source.mascotUrl, defaultCompanyInfo.mascotUrl),
+      name: pickMeaningfulText(source.name, defaultCompanyInfo.name),
+      nameEnglish: pickMeaningfulText(source.nameEnglish, defaultCompanyInfo.nameEnglish),
+      description: pickMeaningfulText(source.description, defaultCompanyInfo.description),
+      mission: pickMeaningfulText(source.mission, defaultCompanyInfo.mission),
+      vision: pickMeaningfulText(source.vision, defaultCompanyInfo.vision),
+      story: pickMeaningfulText(source.story, defaultCompanyInfo.story),
+      logoUrl: pickMeaningfulText(source.logoUrl, defaultCompanyInfo.logoUrl),
+      mascotUrl: pickMeaningfulText(source.mascotUrl, defaultCompanyInfo.mascotUrl),
     };
   }, [companyInfo]);
 
   const safeAboutContent = useMemo<PageContent>(() => ({
     ...aboutFallback,
     ...aboutContent,
-    title: pickText(aboutContent.title, aboutFallback.title),
-    excerpt: pickText(aboutContent.excerpt, aboutFallback.excerpt),
-    content: pickText(aboutContent.content, aboutFallback.content),
-    seoTitle: pickText(aboutContent.seoTitle, aboutFallback.seoTitle),
-    seoDescription: pickText(aboutContent.seoDescription, aboutFallback.seoDescription),
+    title: pickMeaningfulText(aboutContent.title, aboutFallback.title),
+    excerpt: pickMeaningfulText(aboutContent.excerpt, aboutFallback.excerpt),
+    content: pickMeaningfulText(aboutContent.content, aboutFallback.content),
+    seoTitle: pickMeaningfulText(aboutContent.seoTitle, aboutFallback.seoTitle),
+    seoDescription: pickMeaningfulText(aboutContent.seoDescription, aboutFallback.seoDescription),
   }), [aboutContent]);
 
   const safeTeamMembers = useMemo<TeamMember[]>(() => {
@@ -101,10 +106,10 @@ const AboutPage: React.FC = () => {
       .filter((member) => member.isActive)
       .map((member) => ({
         ...member,
-        name: pickText(member.name, defaultTeamMember.name),
-        role: pickText(member.role, defaultTeamMember.role),
-        bio: pickText(member.bio, defaultTeamMember.bio || ''),
-        imageUrl: pickText(member.imageUrl, defaultTeamMember.imageUrl),
+        name: pickMeaningfulText(member.name, defaultTeamMember.name),
+        role: pickMeaningfulText(member.role, defaultTeamMember.role),
+        bio: pickMeaningfulText(member.bio, defaultTeamMember.bio || ''),
+        imageUrl: pickMeaningfulText(member.imageUrl, defaultTeamMember.imageUrl),
       }))
       .filter((member) => !looksCorruptedText(member.name) && !looksCorruptedText(member.role));
 

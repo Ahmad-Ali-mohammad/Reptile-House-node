@@ -29,11 +29,11 @@ const PAYMENT_STATUS_MAP = {
   rejected: 'مرفوض',
 };
 
-function normalizeOrderStatus(value) {
+export function normalizeOrderStatus(value) {
   return ORDER_STATUS_MAP[String(value || '').trim()] || 'قيد المعالجة';
 }
 
-function normalizePaymentStatus(value) {
+export function normalizePaymentStatus(value) {
   return PAYMENT_STATUS_MAP[String(value || '').trim()] || 'قيد المراجعة';
 }
 

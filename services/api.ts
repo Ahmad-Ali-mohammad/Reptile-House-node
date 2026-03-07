@@ -35,17 +35,26 @@ const BASE = normalizeBase(configuredBase);
 const AUTH_TOKEN_STORAGE_KEY = 'semo_auth_token';
 
 type AuthResponse = { user: User; token: string };
+export type ApiRequestOptions = Pick<RequestInit, 'signal'>;
 
 export class ApiError extends Error {
   status?: number;
   isNetworkError: boolean;
+  isAbortError: boolean;
 
-  constructor(message: string, status?: number, isNetworkError = false) {
+  constructor(message: string, status?: number, isNetworkError = false, isAbortError = false) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.isNetworkError = isNetworkError;
+    this.isAbortError = isAbortError;
   }
+}
+
+function isAbortLikeError(error: unknown): boolean {
+  const name = String((error as { name?: string } | undefined)?.name || '');
+  const message = String((error as { message?: string } | undefined)?.message || '');
+  return name === 'AbortError' || /\babort(?:ed)?\b/i.test(message);
 }
 
 function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -67,6 +76,9 @@ function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers,
   })
     .catch((error) => {
+      if (isAbortLikeError(error)) {
+        throw new ApiError('Request aborted', undefined, false, true);
+      }
       throw new ApiError(error?.message || 'Failed to fetch', undefined, true);
     })
     .then(async (res) => {
@@ -84,13 +96,13 @@ export const api = {
     return request<DatabaseStatus>(`/api/system/db-status?includeDetails=${includeDetails}`);
   },
 
-  getProducts: (): Promise<Reptile[]> => request<Reptile[]>('/api/products'),
+  getProducts: (options?: ApiRequestOptions): Promise<Reptile[]> => request<Reptile[]>('/api/products', options),
   saveProduct: (product: Reptile): Promise<Reptile> =>
     product.id ? request<Reptile>(`/api/products/${product.id}`, { method: 'PUT', body: JSON.stringify(product) }) : request<Reptile>('/api/products', { method: 'POST', body: JSON.stringify(product) }),
   deleteProduct: (id: number): Promise<void> => request(`/api/products/${id}`, { method: 'DELETE' }),
 
-  getOrders: (): Promise<Order[]> => request<Order[]>('/api/orders'),
-  getMyOrders: (): Promise<Order[]> => request<Order[]>('/api/orders/my'),
+  getOrders: (options?: ApiRequestOptions): Promise<Order[]> => request<Order[]>('/api/orders', options),
+  getMyOrders: (options?: ApiRequestOptions): Promise<Order[]> => request<Order[]>('/api/orders/my', options),
   saveOrder: (order: Order): Promise<Order> => request<Order>('/api/orders', { method: 'POST', body: JSON.stringify(order) }),
   updateOrderStatus: (id: string, status: Order['status']): Promise<Order> =>
     request<Order>(`/api/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
@@ -101,29 +113,29 @@ export const api = {
     }),
   deleteOrder: (id: string): Promise<void> => request(`/api/orders/${id}`, { method: 'DELETE' }),
 
-  getArticles: (): Promise<Article[]> => request<Article[]>('/api/articles'),
+  getArticles: (options?: ApiRequestOptions): Promise<Article[]> => request<Article[]>('/api/articles', options),
   saveArticle: (article: Article): Promise<Article> =>
     article.id ? request<Article>(`/api/articles/${article.id}`, { method: 'PUT', body: JSON.stringify(article) }) : request<Article>('/api/articles', { method: 'POST', body: JSON.stringify(article) }),
   deleteArticle: (id: number): Promise<void> => request(`/api/articles/${id}`, { method: 'DELETE' }),
 
-  getHeroSlides: (): Promise<HeroSlide[]> => request<HeroSlide[]>('/api/hero'),
+  getHeroSlides: (options?: ApiRequestOptions): Promise<HeroSlide[]> => request<HeroSlide[]>('/api/hero', options),
   saveHeroSlide: (slide: HeroSlide): Promise<HeroSlide> =>
     request<HeroSlide>(`/api/hero/${slide.id}`, { method: 'PUT', body: JSON.stringify(slide) }).catch(() =>
       request<HeroSlide>('/api/hero', { method: 'POST', body: JSON.stringify(slide) })),
   deleteHeroSlide: (id: string): Promise<void> => request(`/api/hero/${id}`, { method: 'DELETE' }),
 
-  getSupplies: (): Promise<Supply[]> => request<Supply[]>('/api/supplies'),
+  getSupplies: (options?: ApiRequestOptions): Promise<Supply[]> => request<Supply[]>('/api/supplies', options),
   saveSupply: (supply: Supply): Promise<Supply> =>
     supply.id ? request<Supply>(`/api/supplies/${supply.id}`, { method: 'PUT', body: JSON.stringify(supply) }) : request<Supply>('/api/supplies', { method: 'POST', body: JSON.stringify(supply) }),
   deleteSupply: (id: number): Promise<void> => request(`/api/supplies/${id}`, { method: 'DELETE' }),
 
-  getAddresses: (): Promise<Address[]> => request<Address[]>('/api/addresses'),
+  getAddresses: (options?: ApiRequestOptions): Promise<Address[]> => request<Address[]>('/api/addresses', options),
   saveAddress: (address: Address): Promise<Address> =>
     request<Address>(`/api/addresses/${address.id}`, { method: 'PUT', body: JSON.stringify(address) }).catch(() =>
       request<Address>('/api/addresses', { method: 'POST', body: JSON.stringify(address) })),
   deleteAddress: (id: number): Promise<void> => request(`/api/addresses/${id}`, { method: 'DELETE' }),
 
-  getUsers: (): Promise<User[]> => request<User[]>('/api/users'),
+  getUsers: (options?: ApiRequestOptions): Promise<User[]> => request<User[]>('/api/users', options),
   saveUser: (user: User): Promise<User> => request<User>(`/api/users/${user.id}`, { method: 'PUT', body: JSON.stringify(user) }),
 
   getOffers: (): Promise<import('../types').PromotionalCard[]> => request<import('../types').PromotionalCard[]>('/api/offers'),
@@ -142,23 +154,23 @@ export const api = {
   getSeoSettings: (): Promise<SeoSettings> => request<SeoSettings>('/api/settings/seo'),
   saveSeoSettings: (settings: SeoSettings): Promise<SeoSettings> => request<SeoSettings>('/api/settings/seo', { method: 'PUT', body: JSON.stringify(settings) }),
 
-  getStoreSettings: (): Promise<StoreSettings> => request<StoreSettings>('/api/settings/store'),
+  getStoreSettings: (options?: ApiRequestOptions): Promise<StoreSettings> => request<StoreSettings>('/api/settings/store', options),
   saveStoreSettings: (settings: Partial<StoreSettings>): Promise<StoreSettings> =>
     request<StoreSettings>('/api/settings/store', { method: 'PUT', body: JSON.stringify(settings) }),
 
-  getCompanyInfo: (): Promise<CompanyInfo> => request<CompanyInfo>('/api/settings/company'),
+  getCompanyInfo: (options?: ApiRequestOptions): Promise<CompanyInfo> => request<CompanyInfo>('/api/settings/company', options),
   saveCompanyInfo: (info: CompanyInfo): Promise<CompanyInfo> => request<CompanyInfo>('/api/settings/company', { method: 'PUT', body: JSON.stringify(info) }),
 
-  getContactInfo: (): Promise<ContactInfo> => request<ContactInfo>('/api/settings/contact'),
+  getContactInfo: (options?: ApiRequestOptions): Promise<ContactInfo> => request<ContactInfo>('/api/settings/contact', options),
   saveContactInfo: (info: ContactInfo): Promise<ContactInfo> => request<ContactInfo>('/api/settings/contact', { method: 'PUT', body: JSON.stringify(info) }),
 
-  getTeamMembers: (): Promise<TeamMember[]> => request<TeamMember[]>('/api/team'),
+  getTeamMembers: (options?: ApiRequestOptions): Promise<TeamMember[]> => request<TeamMember[]>('/api/team', options),
   saveTeamMember: (member: TeamMember): Promise<TeamMember> =>
     request<TeamMember>(`/api/team/${member.id}`, { method: 'PUT', body: JSON.stringify(member) }).catch(() =>
       request<TeamMember>('/api/team', { method: 'POST', body: JSON.stringify(member) })),
   deleteTeamMember: (id: string): Promise<void> => request(`/api/team/${id}`, { method: 'DELETE' }),
 
-  getFilterGroups: (): Promise<FilterGroup[]> => request<FilterGroup[]>('/api/filters'),
+  getFilterGroups: (options?: ApiRequestOptions): Promise<FilterGroup[]> => request<FilterGroup[]>('/api/filters', options),
   saveFilterGroup: (group: FilterGroup): Promise<FilterGroup> =>
     request<FilterGroup>(`/api/filters/${group.id}`, { method: 'PUT', body: JSON.stringify(group) }).catch(() =>
       request<FilterGroup>('/api/filters', { method: 'POST', body: JSON.stringify(group) })),
@@ -168,12 +180,12 @@ export const api = {
   addCustomCategory: (category: { value: string; label: string }): Promise<Array<{ value: string; label: string }>> =>
     request<Array<{ value: string; label: string }>>('/api/custom-categories', { method: 'POST', body: JSON.stringify(category) }),
 
-  getCustomSpecies: (): Promise<string[]> => request<string[]>('/api/custom-species'),
+  getCustomSpecies: (options?: ApiRequestOptions): Promise<string[]> => request<string[]>('/api/custom-species', options),
   addCustomSpecies: (species: string): Promise<string[]> =>
     request<string[]>('/api/custom-species', { method: 'POST', body: JSON.stringify({ species }) }),
 
-  getPageContents: (): Promise<PageContent[]> => request<PageContent[]>('/api/page-contents'),
-  getPageContentBySlug: (slug: string): Promise<PageContent> => request<PageContent>(`/api/page-contents/slug/${encodeURIComponent(slug)}`),
+  getPageContents: (options?: ApiRequestOptions): Promise<PageContent[]> => request<PageContent[]>('/api/page-contents', options),
+  getPageContentBySlug: (slug: string, options?: ApiRequestOptions): Promise<PageContent> => request<PageContent>(`/api/page-contents/slug/${encodeURIComponent(slug)}`, options),
   savePageContent: (pageContent: PageContent): Promise<PageContent> =>
     pageContent.id
       ? request<PageContent>(`/api/page-contents/${pageContent.id}`, { method: 'PUT', body: JSON.stringify(pageContent) })

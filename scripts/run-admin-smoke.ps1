@@ -30,7 +30,7 @@ try {
   $bootstrapPayload = @{
     name = 'Owner'
     email = 'owner@reptilehouse.sy'
-    password = 'Owner@12345'
+    password = 'Owner@2026!'
     secret = 'bootstrap_admin_2026'
   } | ConvertTo-Json
 
@@ -41,7 +41,7 @@ try {
   }
 
   $env:ADMIN_EMAIL = 'owner@reptilehouse.sy'
-  $env:ADMIN_PASSWORD = 'Owner@12345'
+  $env:ADMIN_PASSWORD = 'Owner@2026!'
   Set-Location $repoRoot
   node scripts/admin-crud-smoke.mjs
   if ($LASTEXITCODE -ne 0) {

@@ -8,7 +8,7 @@ import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { applyUtf8Session, MYSQL_CHARSET } from '../config/mysqlCharset.js';
+import { applyUtf8Session, MYSQL_COLLATION } from '../config/mysqlCharset.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,7 +30,7 @@ const db = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'semo_reptile_house',
-  charset: MYSQL_CHARSET,
+  charset: MYSQL_COLLATION,
 };
 
 const defaultPolicies = [

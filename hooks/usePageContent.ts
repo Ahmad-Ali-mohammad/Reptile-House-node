@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PageContent } from '../types';
-import { api } from '../services/api';
+import { api, ApiError } from '../services/api';
 
 interface UsePageContentResult {
   pageContent: PageContent;
@@ -16,32 +16,37 @@ export function usePageContent(slug: string, fallback: PageContent): UsePageCont
   const [hasRemote, setHasRemote] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
     const load = async () => {
       setLoading(true);
       try {
-        const row = await api.getPageContentBySlug(slug);
-        if (!cancelled) {
-          setHasRemote(true);
-          setPageContent(row || fallback);
-          setIsActive(row?.isActive ?? fallback.isActive);
+        const row = await api.getPageContentBySlug(slug, { signal: controller.signal });
+        if (controller.signal.aborted) return;
+
+        setHasRemote(true);
+        setPageContent(row || fallback);
+        setIsActive(row?.isActive ?? fallback.isActive);
+      } catch (error) {
+        if (error instanceof ApiError && error.isAbortError) {
+          return;
         }
-      } catch {
-        if (!cancelled) {
-          setHasRemote(false);
-          setPageContent(fallback);
-          setIsActive(fallback.isActive);
-        }
+        if (controller.signal.aborted) return;
+
+        setHasRemote(false);
+        setPageContent(fallback);
+        setIsActive(fallback.isActive);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     load();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [slug, fallback]);
 

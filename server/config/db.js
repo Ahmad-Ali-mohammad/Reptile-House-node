@@ -1,5 +1,5 @@
 import mysql from 'mysql2';
-import { MYSQL_CHARSET, MYSQL_SESSION_SQL } from './mysqlCharset.js';
+import { MYSQL_COLLATION, MYSQL_SESSION_SQL } from './mysqlCharset.js';
 
 const rawPool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -10,7 +10,7 @@ const rawPool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  charset: MYSQL_CHARSET,
+  charset: MYSQL_COLLATION,
 });
 
 rawPool.on('connection', (connection) => {

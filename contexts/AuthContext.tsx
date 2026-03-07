@@ -15,14 +15,46 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const AUTH_STORAGE_KEY = 'semo_auth_user';
 const AUTH_TOKEN_STORAGE_KEY = 'semo_auth_token';
 
+function clearStoredAuth() {
+  try {
+    globalThis.localStorage.removeItem(AUTH_STORAGE_KEY);
+    globalThis.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function decodeJwtPayload(token: string): { exp?: number } | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    return JSON.parse(globalThis.atob(padded)) as { exp?: number };
+  } catch {
+    return null;
+  }
+}
+
+function isStoredTokenExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 <= Date.now();
+}
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     try {
       const raw = globalThis.localStorage.getItem(AUTH_STORAGE_KEY);
       const token = globalThis.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
       if (!raw || !token) return null;
+      if (isStoredTokenExpired(token)) {
+        clearStoredAuth();
+        return null;
+      }
       return JSON.parse(raw) as User;
     } catch {
+      clearStoredAuth();
       return null;
     }
   });
@@ -32,8 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (user) {
         globalThis.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
       } else {
-        globalThis.localStorage.removeItem(AUTH_STORAGE_KEY);
-        globalThis.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+        clearStoredAuth();
       }
     } catch {
       // ignore storage errors
@@ -52,6 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
+    clearStoredAuth();
     setUser(null);
   };
 

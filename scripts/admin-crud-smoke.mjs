@@ -57,6 +57,7 @@ async function run() {
   const results = [];
   const created = {
     productId: null,
+    supplyId: null,
     articleId: null,
     heroId: null,
     offerId: null,
@@ -308,6 +309,53 @@ async function run() {
     fail('Products CRUD', error);
   }
 
+  // SUPPLIES CRUD
+  try {
+    const createdSupply = await request('/supplies', {
+      method: 'POST',
+      token,
+      expected: [201],
+      body: {
+        name: `مستلزم ${ar} ${runId}`,
+        category: 'heating',
+        description: `CRUD smoke supply ${ar}`,
+        price: 89,
+        imageUrl: '/assets/photo_2026-02-04_07-13-35.jpg',
+        rating: 4.8,
+        isAvailable: true,
+        status: 'متوفر',
+      },
+    });
+    created.supplyId = createdSupply.data?.id;
+    assert(created.supplyId, 'Supply create did not return id');
+
+    await request(`/supplies/${created.supplyId}`, {
+      method: 'PUT',
+      token,
+      expected: [200],
+      body: {
+        price: 99,
+        name: `مستلزم محدث ${ar} ${runId}`,
+        status: 'غير متوفر',
+        isAvailable: false,
+      },
+    });
+    const list = await request('/supplies', { expected: [200] });
+    assert(Array.isArray(list.data) && list.data.some((s) => s.id === created.supplyId), 'Supply not found in list');
+    assert(
+      list.data.some((s) => s.id === created.supplyId && String(s.name || '').includes(ar)),
+      'Supply Arabic text not preserved',
+    );
+
+    await request(`/supplies/${created.supplyId}`, { method: 'DELETE', token, expected: [204] });
+    const listAfterDelete = await request('/supplies', { expected: [200] });
+    assert(!listAfterDelete.data.some((s) => s.id === created.supplyId), 'Supply still exists after delete');
+    created.supplyId = null;
+    pass('Supplies CRUD');
+  } catch (error) {
+    fail('Supplies CRUD', error);
+  }
+
   // ARTICLE CRUD
   try {
     const createdArticle = await request('/articles', {
@@ -530,6 +578,7 @@ async function run() {
 async function safeCleanup(token, created, originalSettings) {
   const cleanupOps = [];
   if (created.productId) cleanupOps.push(request(`/products/${created.productId}`, { method: 'DELETE', token, expected: [204, 404] }));
+  if (created.supplyId) cleanupOps.push(request(`/supplies/${created.supplyId}`, { method: 'DELETE', token, expected: [204, 404] }));
   if (created.articleId) cleanupOps.push(request(`/articles/${created.articleId}`, { method: 'DELETE', token, expected: [204, 404] }));
   if (created.heroId) cleanupOps.push(request(`/hero/${created.heroId}`, { method: 'DELETE', token, expected: [204, 404] }));
   if (created.offerId) cleanupOps.push(request(`/offers/${created.offerId}`, { method: 'DELETE', token, expected: [204, 404] }));

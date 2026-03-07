@@ -4,7 +4,7 @@ import path from 'path';
 import mysql from 'mysql2';
 import mysqlPromise from 'mysql2/promise';
 import { fileURLToPath } from 'url';
-import { applyUtf8Session, MYSQL_CHARSET } from '../config/mysqlCharset.js';
+import { applyUtf8Session, MYSQL_COLLATION } from '../config/mysqlCharset.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -43,7 +43,7 @@ async function run() {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: dbName,
-    charset: MYSQL_CHARSET,
+    charset: MYSQL_COLLATION,
   });
   await applyUtf8Session(conn);
 

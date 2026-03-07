@@ -196,7 +196,7 @@ const ReportsPage: React.FC = () => {
         <SummaryCard label="إجمالي المبيعات" value={`$${salesSummary.totalRevenue.toFixed(2)}`} accent="green" icon="💰" />
         <SummaryCard label="عدد الطلبات" value={String(salesSummary.totalOrders)} accent="blue" icon="📦" />
         <SummaryCard label="متوسط الطلب" value={`$${salesSummary.averageOrderValue.toFixed(2)}`} accent="amber" icon="📈" />
-        <SummaryCard label="المقبوض المؤكد" value={`$${salesSummary.acceptedRevenue.toFixed(2)}`} accent="purple" icon="✅" />
+        <SummaryCard label="المدفوع المؤكد" value={`$${salesSummary.acceptedRevenue.toFixed(2)}`} accent="purple" icon="✅" />
       </div>
 
       <Card title="الحركة اليومية">
@@ -337,7 +337,7 @@ const ReportsPage: React.FC = () => {
       <div className="mb-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
         <div>
           <h1 className="text-4xl font-black">التقارير</h1>
-          <p className="mt-2 text-gray-400">تقارير حية مبنية على الطلبات والمنتجات والمستلزمات والعملاء ضمن الفترة المختارة.</p>
+          <p className="mt-2 text-gray-400">تقارير تشغيلية مباشرة مبنية على الطلبات والمنتجات والمستلزمات والعملاء ضمن الفترة الزمنية المحددة.</p>
         </div>
         <HelpButton onClick={() => setIsHelpOpen(true)} />
       </div>

@@ -1,6 +1,6 @@
-import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { Reptile, Order, Address, User, Article, HeroSlide, Supply } from '../types';
-import { api } from '../services/api';
+import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 
 interface DatabaseContextType {
@@ -36,7 +36,7 @@ interface DatabaseContextType {
 const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
 
 export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [products, setProducts] = useState<Reptile[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -47,32 +47,53 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [loading, setLoading] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState(true);
   const isManager = user?.role === 'admin' || user?.role === 'manager';
+  const refreshControllerRef = useRef<AbortController | null>(null);
+
+  const isAbortApiError = (error: unknown): boolean => error instanceof ApiError && error.isAbortError;
+  const isUnauthorizedApiError = (error: unknown): boolean => error instanceof ApiError && error.status === 401;
 
   const readArrayResult = <T,>(label: string, result: PromiseSettledResult<T[]>) => {
     if (result.status === 'fulfilled') {
       return Array.isArray(result.value) ? result.value : [];
     }
 
-    console.error(`Failed to load ${label}:`, result.reason);
+    if (!isAbortApiError(result.reason) && !isUnauthorizedApiError(result.reason)) {
+      console.error(`Failed to load ${label}:`, result.reason);
+    }
     return [];
   };
 
   const refreshData = useCallback(() => {
+    refreshControllerRef.current?.abort();
+    const controller = new AbortController();
+    refreshControllerRef.current = controller;
     setLoading(true);
     const baseRequests = [
-      api.getProducts(),
-      api.getArticles(),
-      api.getHeroSlides(),
-      api.getSupplies(),
+      api.getProducts({ signal: controller.signal }),
+      api.getArticles({ signal: controller.signal }),
+      api.getHeroSlides({ signal: controller.signal }),
+      api.getSupplies({ signal: controller.signal }),
     ];
     const protectedRequests = isManager
-      ? [api.getOrders(), api.getAddresses(), api.getUsers()]
+      ? [
+          api.getOrders({ signal: controller.signal }),
+          api.getAddresses({ signal: controller.signal }),
+          api.getUsers({ signal: controller.signal }),
+        ]
       : user
-        ? [api.getMyOrders(), api.getAddresses(), Promise.resolve([] as User[])]
+        ? [
+            api.getMyOrders({ signal: controller.signal }),
+            api.getAddresses({ signal: controller.signal }),
+            Promise.resolve([] as User[]),
+          ]
         : [Promise.resolve([] as Order[]), Promise.resolve([] as Address[]), Promise.resolve([] as User[])];
 
     Promise.allSettled([...baseRequests, ...protectedRequests])
       .then((results) => {
+        if (controller.signal.aborted || refreshControllerRef.current !== controller) {
+          return;
+        }
+
         const [productsResult, articlesResult, heroResult, suppliesResult, ordersResult, addressesResult, usersResult] = results as [
           PromiseSettledResult<Reptile[]>,
           PromiseSettledResult<Article[]>,
@@ -82,6 +103,22 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
           PromiseSettledResult<Address[]>,
           PromiseSettledResult<User[]>,
         ];
+
+        const relevantProtectedResults = isManager
+          ? [ordersResult, addressesResult, usersResult]
+          : user
+            ? [ordersResult, addressesResult]
+            : [];
+
+        if (
+          relevantProtectedResults.length > 0 &&
+          relevantProtectedResults.every(
+            (result) => result.status === 'rejected' && isUnauthorizedApiError(result.reason),
+          )
+        ) {
+          logout();
+          return;
+        }
 
         setProducts(readArrayResult('products', productsResult));
         setArticles(readArrayResult('articles', articlesResult));
@@ -94,15 +131,26 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
         setBackendAvailable(results.every((result) => result.status === 'fulfilled'));
       })
       .catch((error) => {
+        if (isAbortApiError(error)) {
+          return;
+        }
         console.error(error);
         setBackendAvailable(false);
       })
-      .finally(() => setLoading(false));
-  }, [isManager, user?.id]);
+      .finally(() => {
+        if (!controller.signal.aborted && refreshControllerRef.current === controller) {
+          setLoading(false);
+        }
+      });
+  }, [isManager, logout, user]);
 
   useEffect(() => {
     refreshData();
   }, [refreshData, user?.id, user?.role]);
+
+  useEffect(() => () => {
+    refreshControllerRef.current?.abort();
+  }, []);
 
   const addProduct = (product: Reptile) => {
     api.saveProduct(product).then(() => refreshData()).catch(console.error);

@@ -8,6 +8,7 @@ import PageNotAvailable from '../components/PageNotAvailable';
 import { Page } from '../App';
 import { usePageContent } from '../hooks/usePageContent';
 import { PageContent } from '../types';
+import { pickMeaningfulText } from '../utils/contentText';
 
 export type Filters = {
     categories: string[];
@@ -25,11 +26,11 @@ interface SuppliesPageProps {
 const suppliesFallback: PageContent = {
     id: 'fallback-supplies',
     slug: 'supplies',
-    title: 'المستلزمات',
-    excerpt: '',
-    content: '',
-    seoTitle: 'المستلزمات - بيت الزواحف',
-    seoDescription: '',
+    title: 'مستلزمات العناية والبيئة',
+    excerpt: 'كل ما تحتاجه لبناء بيئة متوازنة وآمنة لزاحفك: تدفئة، إضاءة، تغذية، تنظيف، وإكسسوارات عملية مختبرة.',
+    content: '<h2>المستلزمات الصحيحة تصنع فرقًا كبيرًا</h2><p>نوفر منتجات أساسية ومتقدمة تساعدك على ضبط الحرارة والرطوبة والنظافة والتغذية، بما ينعكس مباشرة على صحة الحيوان وسهولة العناية اليومية.</p>',
+    seoTitle: 'مستلزمات الزواحف | Reptile House',
+    seoDescription: 'تسوق مستلزمات الزواحف الموثوقة من Reptile House لتجهيز بيئة صحية ومستقرة.',
     isActive: true,
     updatedAt: new Date().toISOString().slice(0, 10),
 };
@@ -46,6 +47,15 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [viewMode, setViewMode] = useState<CardVariant>('grid');
+    const safePageContent = useMemo<PageContent>(() => ({
+        ...suppliesFallback,
+        ...pageContent,
+        title: pickMeaningfulText(pageContent.title, suppliesFallback.title),
+        excerpt: pickMeaningfulText(pageContent.excerpt, suppliesFallback.excerpt || ''),
+        content: pickMeaningfulText(pageContent.content, suppliesFallback.content),
+        seoTitle: pickMeaningfulText(pageContent.seoTitle, suppliesFallback.seoTitle || ''),
+        seoDescription: pickMeaningfulText(pageContent.seoDescription, suppliesFallback.seoDescription || ''),
+    }), [pageContent]);
 
     const filteredSupplies = useMemo(() => {
         let result = [...supplies].filter(supply => {
@@ -91,7 +101,7 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
     }
 
     if (!isActive) {
-        return <PageNotAvailable title={pageContent.title || 'صفحة المستلزمات غير متاحة حالياً'} />;
+        return <PageNotAvailable title={safePageContent.title || 'صفحة المستلزمات غير متاحة حالياً'} />;
     }
 
     return (
@@ -100,15 +110,15 @@ const SuppliesPage: React.FC<SuppliesPageProps> = ({ setPage }) => {
             <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-right">
                 <div className="animate-slide-up">
                     <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-none text-white">
-                        {pageContent.title || 'المستلزمات'}
+                        {safePageContent.title}
                     </h1>
-                    {pageContent.excerpt && (
-                        <p className="text-lg md:text-xl text-gray-400 mt-6 max-w-lg font-bold leading-relaxed">{pageContent.excerpt}</p>
+                    {safePageContent.excerpt && (
+                        <p className="text-lg md:text-xl text-gray-400 mt-6 max-w-lg font-bold leading-relaxed">{safePageContent.excerpt}</p>
                     )}
-                    {pageContent.content?.trim() && (
+                    {safePageContent.content?.trim() && (
                         <div
                             className="mt-6 bg-white/5 border border-white/10 rounded-2xl p-5 text-gray-300 leading-loose text-right"
-                            dangerouslySetInnerHTML={{ __html: pageContent.content }}
+                            dangerouslySetInnerHTML={{ __html: safePageContent.content }}
                         />
                     )}
                 </div>
