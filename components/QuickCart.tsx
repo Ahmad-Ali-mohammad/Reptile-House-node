@@ -36,7 +36,7 @@ const QuickCart: React.FC<QuickCartProps> = ({ setPage, currentPage }) => {
             >
                 <div className="flex h-full flex-col">
                     <div className="flex items-center justify-between border-b border-white/10 p-4">
-                        <h2 className="text-xl font-bold">Ø³Ù„Ø© Ø§Ù„ØªØ³ÙˆÙ‚</h2>
+                        <h2 className="text-xl font-bold">سلة التسوق</h2>
                         <button onClick={() => setIsOpen(false)} className="p-2 hover:text-amber-400">
                             <ChevronLeftIcon className="h-6 w-6 rotate-180" />
                         </button>
@@ -62,13 +62,13 @@ const QuickCart: React.FC<QuickCartProps> = ({ setPage, currentPage }) => {
                         </div>
                     ) : (
                         <div className="flex flex-grow items-center justify-center">
-                            <p>Ø³Ù„ØªÙƒ ÙØ§Ø±ØºØ©.</p>
+                            <p>سلتك فارغة.</p>
                         </div>
                     )}
 
                     <div className="space-y-4 border-t border-white/10 p-4">
                         <div className="flex justify-between text-lg">
-                            <span className="font-bold">Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ:</span>
+                            <span className="font-bold">الإجمالي:</span>
                             <span className="font-poppins font-black text-amber-400">${total.toFixed(2)}</span>
                         </div>
                         <button
@@ -76,7 +76,7 @@ const QuickCart: React.FC<QuickCartProps> = ({ setPage, currentPage }) => {
                             disabled={cart.length === 0}
                             className="w-full rounded-lg bg-amber-500 px-4 py-3 font-bold text-gray-900 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-gray-600"
                         >
-                            Ø¥ØªÙ…Ø§Ù… Ø§Ù„Ø·Ù„Ø¨
+                            إتمام الطلب
                         </button>
                     </div>
                 </div>
