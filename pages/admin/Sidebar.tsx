@@ -113,8 +113,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, setAppMode
   };
 
   return (
-    <aside className="w-72 h-full overflow-hidden bg-gray-900/60 backdrop-blur-2xl border-l border-white/10 flex flex-col shadow-2xl">
-      <div className="p-8 border-b border-white/5">
+    <aside className="flex h-full w-[min(20rem,calc(100vw-1rem))] flex-col overflow-hidden border-l border-white/10 bg-gray-900/60 shadow-2xl backdrop-blur-2xl sm:w-72">
+      <div className="border-b border-white/5 p-6 sm:p-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gradient-to-tr from-amber-600 to-amber-400 rounded-2xl flex items-center justify-center shadow-lg">
             <SnakeIcon className="w-7 h-7 text-gray-900" />
@@ -126,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, setAppMode
         </div>
       </div>
 
-      <nav className="flex-1 min-h-0 p-6 pb-10 space-y-6 overflow-y-auto scrollbar-hide text-right">
+      <nav className="scrollbar-hide flex-1 min-h-0 space-y-5 overflow-y-auto p-5 pb-8 text-right sm:space-y-6 sm:p-6 sm:pb-10">
         {sidebarConfig.map(section => (
           <div key={section.name} className="space-y-2">
             <button onClick={() => toggleSection(section.name)} className="w-full flex justify-between items-center px-2">
@@ -138,7 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, setAppMode
                 <button
                   key={item.name}
                   onClick={() => handleNavigate(item.page as any)}
-                  className={`flex items-center gap-3 w-full p-3.5 rounded-2xl transition-all ${activePage === item.page ? 'bg-amber-500 text-gray-900 font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5'}`}
+                  className={`flex w-full items-center gap-3 rounded-2xl p-3 text-sm transition-all sm:p-3.5 ${activePage === item.page ? 'bg-amber-500 text-gray-900 font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5'}`}
                 >
                   {item.icon}
                   <span className="text-sm">{item.name}</span>
@@ -154,7 +154,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, setAppMode
         ))}
       </nav>
 
-      <div className="shrink-0 p-6 bg-gray-950/80 backdrop-blur-xl border-t border-white/5">
+      <div className="shrink-0 border-t border-white/5 bg-gray-950/80 p-5 backdrop-blur-xl sm:p-6">
         <button onClick={handleBackToSite} className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 rounded-xl text-gray-400 hover:text-white mb-2">
           <DashboardIcon className="w-4 h-4 rotate-180" />
           <span className="text-xs font-bold">العودة للمتجر</span>

@@ -283,25 +283,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                 />
             )}
 
-            <div className={`fixed inset-y-0 right-0 z-[70] transform transition-transform duration-500 ease-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div
+                className={`fixed inset-y-0 right-0 z-[70] transform transition-transform duration-500 ease-out lg:relative lg:translate-x-0 lg:pointer-events-auto ${
+                    isSidebarOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
+                }`}
+            >
                 <Sidebar activePage={activePage} setActivePage={(p) => { setActivePage(p); setIsSidebarOpen(false); }} setAppMode={setAppMode} setPage={setPage} ordersBadgeCount={pendingReviewCount} />
             </div>
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                <header className="flex items-center justify-between p-6 bg-gray-900/40 backdrop-blur-md border-b border-white/5">
-                    <div className="flex items-center gap-4">
+                <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 bg-gray-900/40 p-4 backdrop-blur-md sm:p-5 lg:flex-nowrap lg:p-6">
+                    <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-3 bg-white/5 rounded-xl text-amber-500"
+                            className="rounded-xl bg-white/5 p-3 text-amber-500 lg:hidden"
                             aria-label="فتح القائمة الجانبية"
                         >
                             <MenuIcon className="w-6 h-6" />
                         </button>
-                        <div className="hidden lg:block">
+                        <div className="hidden min-w-0 lg:block">
                             <h1 className="text-xl font-black text-white">{getPageTitle()}</h1>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 lg:w-auto lg:flex-nowrap">
                         {canManageOrders && (
                             <div className="relative">
                                 <button
@@ -319,7 +323,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                                 </button>
 
                                 {isNotificationsOpen && (
-                                    <div className="absolute left-0 top-14 z-30 w-96 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#11141b]/95 shadow-2xl backdrop-blur-xl">
+                                    <div className="absolute left-0 top-14 z-30 w-[min(24rem,calc(100vw-1rem))] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#11141b]/95 shadow-2xl backdrop-blur-xl sm:w-96 sm:max-w-none">
                                         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
                                             <div>
                                                 <p className="text-sm font-black text-white">إشعارات الطلبات</p>
@@ -372,26 +376,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ setAppMode, setPage, 
                             type="button"
                             onClick={handleOpenDbStatus}
                             title={dbStatusError || 'عرض حالة قاعدة البيانات'}
-                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-black transition-colors ${dbStatusBadge.className}`}
+                            className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition-colors ${dbStatusBadge.className}`}
                         >
                             <span className={`w-2.5 h-2.5 rounded-full ${isDbStatusLoading ? 'bg-amber-300 animate-pulse' : dbStatus?.connected ? 'bg-emerald-300' : 'bg-red-300'}`} />
-                            <span>{dbStatusBadge.text}</span>
+                            <span className="hidden sm:inline">{dbStatusBadge.text}</span>
+                            <span className="sm:hidden">قاعدة البيانات</span>
                         </button>
-                        <div className="text-sm font-bold text-gray-500 font-poppins">{new Date().toLocaleDateString('ar-SY')}</div>
+                        <div className="font-poppins text-xs font-bold text-gray-500 sm:text-sm">{new Date().toLocaleDateString('ar-SY')}</div>
                     </div>
                 </header>
 
-                <main className="flex-1 p-6 md:p-10 overflow-y-auto scrollbar-hide bg-gradient-to-b from-transparent to-gray-900/20">
+                <main className="flex-1 overflow-y-auto bg-gradient-to-b from-transparent to-gray-900/20 p-4 scrollbar-hide sm:p-6 md:p-8 xl:p-10">
                     <div className="max-w-6xl mx-auto animate-fade-in">
                         {canManageOrders && orderNotifications.length > 0 && activePage !== 'orders' && (
-                            <div className="mb-6 flex flex-col gap-4 rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10 p-5 md:flex-row md:items-center md:justify-between">
+                            <div className="mb-6 flex flex-col gap-4 rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10 p-4 sm:p-5 md:flex-row md:items-center md:justify-between">
                                 <div>
                                     <p className="mb-1 text-sm font-black text-amber-300">هناك {orderNotifications.length} طلبات جديدة بانتظار مراجعتك</p>
                                     <p className="text-sm leading-relaxed text-gray-200">
                                         افتح صفحة الطلبات لمراجعة إثبات الدفع، اعتماد المبلغ المدفوع، ثم قبول أو رفض الطلب.
                                     </p>
                                 </div>
-                                <div className="flex gap-3">
+                                <div className="flex flex-col gap-3 sm:flex-row">
                                     <button
                                         type="button"
                                         onClick={() => handleOpenOrdersPage()}

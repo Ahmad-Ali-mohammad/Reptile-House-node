@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Order } from '../types';
-import { getCustomerDisplayName, getPaymentStatusClasses, getPaymentStatusIcon, getShippingSummary, normalizePaymentStatus } from '../utils/orderWorkflow';
+import {
+  getCustomerDisplayName,
+  getPaymentStatusClasses,
+  getPaymentStatusIcon,
+  getShippingSummary,
+  normalizePaymentStatus,
+} from '../utils/orderWorkflow';
 
 interface PaymentVerificationModalProps {
   isOpen: boolean;
@@ -23,7 +29,9 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
     setPaidAmountInput(nextValue.toFixed(2));
   }, [isOpen, order]);
 
-  if (!isOpen || !order) return null;
+  if (!isOpen || !order) {
+    return null;
+  }
 
   const normalizedPaymentStatus = normalizePaymentStatus(order.paymentVerificationStatus);
   const parsedPaidAmount = Number.parseFloat(paidAmountInput);
@@ -50,7 +58,12 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
       return;
     }
 
-    onVerify(order.id, 'مرفوض', rejectionReason.trim(), Number.isFinite(parsedPaidAmount) && parsedPaidAmount > 0 ? parsedPaidAmount : undefined);
+    onVerify(
+      order.id,
+      'مرفوض',
+      rejectionReason.trim(),
+      Number.isFinite(parsedPaidAmount) && parsedPaidAmount > 0 ? parsedPaidAmount : undefined,
+    );
     setShowRejectInput(false);
     setRejectionReason('');
   };
@@ -62,77 +75,101 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in" dir="rtl">
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" dir="rtl">
       <button
         type="button"
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-default"
+        className="absolute inset-0 cursor-default bg-black/70 backdrop-blur-sm"
         onClick={handleClose}
         aria-label="إغلاق نافذة التحقق من الدفع"
       />
 
-      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto glass-heavy rounded-[2.5rem] p-8 border border-white/10 shadow-2xl space-y-8">
+      <div className="glass-heavy relative max-h-[92vh] w-full max-w-5xl space-y-6 overflow-y-auto rounded-[2rem] border border-white/10 p-4 shadow-2xl sm:space-y-8 sm:p-6 lg:rounded-[2.5rem] lg:p-8">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-amber-500 font-black mb-3">مراجعة إثبات الدفع</p>
-            <h2 className="text-3xl font-black text-white">الطلب #{order.id}</h2>
-            <p className="text-gray-400 mt-2">راجع صورة التحويل وبيانات العميل قبل قبول الطلب أو رفضه.</p>
+          <div className="min-w-0">
+            <p className="mb-3 text-[11px] font-black uppercase tracking-[0.35em] text-amber-500">مراجعة إثبات الدفع</p>
+            <h2 className="text-2xl font-black text-white sm:text-3xl">الطلب #{order.id}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400 sm:text-base">
+              راجع صورة التحويل وبيانات العميل قبل قبول الطلب أو رفضه، مع اعتماد المبلغ الصحيح الذي سيظهر في المتابعة
+              والتقارير.
+            </p>
           </div>
+
           <button
+            type="button"
             onClick={handleClose}
             aria-label="إغلاق"
-            className="p-3 hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white"
+            className="rounded-xl p-3 text-gray-400 transition-all hover:bg-white/10 hover:text-white"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-sm mb-2">حالة التحقق</p>
-            <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold border ${getPaymentStatusClasses(normalizedPaymentStatus)}`}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+            <p className="mb-2 text-sm text-gray-400">حالة التحقق</p>
+            <div
+              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${getPaymentStatusClasses(normalizedPaymentStatus)}`}
+            >
               <span>{getPaymentStatusIcon(normalizedPaymentStatus)}</span>
               {normalizedPaymentStatus}
             </div>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-sm mb-2">طريقة الدفع</p>
-            <p className="text-white font-bold text-lg">{order.paymentMethod === 'shamcash' ? 'شام كاش' : 'بطاقة'}</p>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+            <p className="mb-2 text-sm text-gray-400">طريقة الدفع</p>
+            <p className="text-lg font-bold text-white">{order.paymentMethod === 'shamcash' ? 'شام كاش' : 'بطاقة'}</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-sm mb-2">قيمة الطلب</p>
-            <p className="text-amber-500 font-poppins font-black text-2xl">${order.total.toFixed(2)}</p>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+            <p className="mb-2 text-sm text-gray-400">قيمة الطلب</p>
+            <p className="font-poppins text-2xl font-black text-amber-500">${order.total.toFixed(2)}</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-sm mb-2">المبلغ المرفوع</p>
-            <p className="text-emerald-400 font-poppins font-black text-2xl">
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+            <p className="mb-2 text-sm text-gray-400">المبلغ المرفوع</p>
+            <p className="font-poppins text-2xl font-black text-emerald-400">
               ${typeof order.paidAmount === 'number' ? order.paidAmount.toFixed(2) : '0.00'}
             </p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-sm mb-2">تاريخ الطلب</p>
-            <p className="text-white font-bold text-lg">{order.date}</p>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+            <p className="mb-2 text-sm text-gray-400">تاريخ الطلب</p>
+            <p className="text-lg font-bold text-white">{order.date}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
             <h3 className="text-lg font-black text-white">بيانات العميل</h3>
-            <p className="text-gray-300"><span className="text-gray-500">الاسم:</span> {getCustomerDisplayName(order)}</p>
-            <p className="text-gray-300"><span className="text-gray-500">البريد:</span> {order.customerEmail || 'غير متوفر'}</p>
-            <p className="text-gray-300"><span className="text-gray-500">الهاتف:</span> {order.customerPhone || 'غير متوفر'}</p>
-            <p className="text-gray-300 leading-relaxed"><span className="text-gray-500">عنوان الشحن:</span> {getShippingSummary(order)}</p>
+            <div className="mt-4 space-y-3 text-sm text-gray-300 sm:text-base">
+              <p>
+                <span className="text-gray-500">الاسم:</span> {getCustomerDisplayName(order)}
+              </p>
+              <p>
+                <span className="text-gray-500">البريد:</span> {order.customerEmail || 'غير متوفر'}
+              </p>
+              <p>
+                <span className="text-gray-500">الهاتف:</span> {order.customerPhone || 'غير متوفر'}
+              </p>
+              <p className="leading-relaxed">
+                <span className="text-gray-500">عنوان الشحن:</span> {getShippingSummary(order)}
+              </p>
+            </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
             <h3 className="text-lg font-black text-white">محتويات الطلب</h3>
-            <div className="space-y-3 max-h-52 overflow-y-auto pr-2">
+            <div className="mt-4 max-h-64 space-y-3 overflow-y-auto pl-1">
               {order.items.map((item) => (
-                <div key={`${item.reptileId}-${item.name}`} className="flex items-center gap-3 bg-black/20 rounded-xl p-3">
-                  <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-xl object-cover border border-white/10" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-white truncate">{item.name}</p>
+                <div
+                  key={`${item.reptileId}-${item.name}`}
+                  className="flex items-center gap-3 rounded-xl bg-black/20 p-3"
+                >
+                  <img src={item.imageUrl} alt={item.name} className="h-14 w-14 rounded-xl border border-white/10 object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold text-white">{item.name}</p>
                     <p className="text-sm text-gray-400">الكمية: {item.quantity}</p>
                   </div>
                   <p className="font-poppins font-black text-amber-500">${item.price.toFixed(2)}</p>
@@ -143,45 +180,49 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
         </div>
 
         {order.rejectionReason && normalizedPaymentStatus === 'مرفوض' && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
-            <h4 className="font-bold text-red-400 mb-2">سبب الرفض المسجل</h4>
-            <p className="text-gray-300 leading-relaxed">{order.rejectionReason}</p>
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 sm:p-6">
+            <h4 className="mb-2 font-bold text-red-400">سبب الرفض المسجل</h4>
+            <p className="leading-relaxed text-gray-300">{order.rejectionReason}</p>
           </div>
         )}
 
         {order.paymentConfirmationImage ? (
           <div className="space-y-4">
-            <h4 className="font-bold text-white text-lg">صورة إثبات الدفع</h4>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 overflow-hidden">
+            <h4 className="text-lg font-bold text-white">صورة إثبات الدفع</h4>
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
               <img
                 src={order.paymentConfirmationImage}
                 alt="إثبات الدفع"
-                className="w-full h-auto rounded-xl object-contain max-h-[500px] mx-auto"
+                className="mx-auto max-h-[50vh] w-full rounded-xl object-contain"
               />
             </div>
           </div>
         ) : (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5 text-red-300">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-red-300">
             لا توجد صورة مرفوعة لإثبات الدفع لهذا الطلب.
           </div>
         )}
 
         {showRejectInput && (
-          <div className="space-y-3 animate-fade-in">
-            <label htmlFor="rejection-reason" className="block text-white font-bold">سبب رفض التحويل</label>
+          <div className="animate-fade-in space-y-3">
+            <label htmlFor="rejection-reason" className="block font-bold text-white">
+              سبب رفض التحويل
+            </label>
             <textarea
               id="rejection-reason"
               value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
+              onChange={(event) => setRejectionReason(event.target.value)}
               placeholder="اكتب سببًا واضحًا ليتمكن العميل من إعادة الدفع أو تصحيح الخطأ."
               rows={4}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-5 text-white leading-relaxed focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
+              className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-4 leading-relaxed text-white transition-all focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
         )}
 
         <div className="space-y-3">
-          <label htmlFor="paid-amount" className="block text-white font-bold">المبلغ المدفوع المعتمد</label>
+          <label htmlFor="paid-amount" className="block font-bold text-white">
+            المبلغ المدفوع المعتمد
+          </label>
           <input
             id="paid-amount"
             type="number"
@@ -191,21 +232,23 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
             value={paidAmountInput}
             onChange={(event) => setPaidAmountInput(event.target.value)}
             placeholder="أدخل المبلغ المؤكد من إثبات الدفع"
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-4 px-5 font-poppins text-white outline-none transition-all focus:ring-2 focus:ring-amber-500/50"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 font-poppins text-white outline-none transition-all focus:ring-2 focus:ring-amber-500/50"
             dir="ltr"
           />
-          <p className="text-xs leading-relaxed text-gray-400">
-            يستخدم هذا المبلغ في التقارير وفي متابعة الطلب، ويمكن تعديله هنا إذا اختلف عن إجمالي الطلب أو عن المبلغ الذي أدخله العميل.
+          <p className="text-xs leading-relaxed text-gray-400 sm:text-sm">
+            هذا المبلغ يستخدم في التقارير وفي متابعة الطلب، ويمكن تعديله هنا إذا اختلف عن إجمالي الطلب أو عن الرقم الذي
+            أدخله العميل.
           </p>
         </div>
 
-        <div className="flex gap-4 flex-wrap">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <button
+            type="button"
             onClick={handleAccept}
             disabled={normalizedPaymentStatus === 'مقبول'}
-            className={`flex-1 min-w-[200px] py-4 px-6 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${
+            className={`inline-flex min-h-12 items-center justify-center rounded-xl px-4 py-4 text-base font-bold transition-all shadow-lg hover:shadow-xl ${
               normalizedPaymentStatus === 'مقبول'
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                ? 'cursor-not-allowed bg-gray-600 text-gray-400'
                 : 'bg-green-500 text-white hover:bg-green-400'
             }`}
           >
@@ -213,15 +256,17 @@ const PaymentVerificationModal: React.FC<PaymentVerificationModalProps> = ({ isO
           </button>
 
           <button
+            type="button"
             onClick={handleReject}
-            className="flex-1 min-w-[200px] py-4 px-6 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 bg-red-500 text-white hover:bg-red-400"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-red-500 px-4 py-4 text-base font-bold text-white transition-all shadow-lg hover:bg-red-400 hover:shadow-xl"
           >
             {showRejectInput ? 'حفظ سبب الرفض' : 'رفض إثبات الدفع'}
           </button>
 
           <button
+            type="button"
             onClick={handleClose}
-            className="flex-1 min-w-[180px] py-4 px-6 rounded-xl font-bold text-lg transition-all bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-base font-bold text-gray-300 transition-all hover:bg-white/10"
           >
             إغلاق
           </button>

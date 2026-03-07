@@ -4,7 +4,6 @@ import HelpModal from '../../components/HelpModal';
 import { PackageIcon, SearchIcon, UserIcon } from '../../components/icons';
 import { helpContent } from '../../constants/helpContent';
 import { useDatabase } from '../../contexts/DatabaseContext';
-import { Order } from '../../types';
 import { getCustomerDisplayName, normalizeOrderStatus, normalizePaymentStatus } from '../../utils/orderWorkflow';
 
 type ReportType = 'sales' | 'orders' | 'customers' | 'inventory' | 'performance';
@@ -30,6 +29,8 @@ type PeriodValue = (typeof periods)[number]['value'];
 
 const toDateOnly = (value: Date) => value.toISOString().split('T')[0];
 
+const summaryGridClass = 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4';
+
 const ReportsPage: React.FC = () => {
   const { orders, products, supplies, users } = useDatabase();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>('month');
@@ -48,6 +49,7 @@ const ReportsPage: React.FC = () => {
     if (selectedPeriod !== 'custom') {
       rangeEnd = today;
       rangeStart = new Date(today);
+
       if (selectedPeriod === 'today') {
         rangeStart.setHours(0, 0, 0, 0);
       } else if (selectedPeriod === 'week') {
@@ -81,7 +83,10 @@ const ReportsPage: React.FC = () => {
     const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
     const totalOrders = filteredOrders.length;
     const acceptedPayments = filteredOrders.filter((order) => order.paymentVerificationStatus === 'مقبول');
-    const acceptedRevenue = acceptedPayments.reduce((sum, order) => sum + (typeof order.paidAmount === 'number' ? order.paidAmount : order.total), 0);
+    const acceptedRevenue = acceptedPayments.reduce(
+      (sum, order) => sum + (typeof order.paidAmount === 'number' ? order.paidAmount : order.total),
+      0,
+    );
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     const byDate = filteredOrders.reduce<Record<string, { revenue: number; orders: number }>>((accumulator, order) => {
@@ -89,6 +94,7 @@ const ReportsPage: React.FC = () => {
       if (!accumulator[key]) {
         accumulator[key] = { revenue: 0, orders: 0 };
       }
+
       accumulator[key].revenue += order.total;
       accumulator[key].orders += 1;
       return accumulator;
@@ -144,19 +150,23 @@ const ReportsPage: React.FC = () => {
     return Object.values(customerMap).sort((a, b) => b.totalSpent - a.totalSpent);
   }, [filteredOrders]);
 
-  const orderStatusSummary = useMemo(() => {
-    return filteredOrders.reduce<Record<string, number>>((accumulator, order) => {
-      accumulator[order.status] = (accumulator[order.status] || 0) + 1;
-      return accumulator;
-    }, {});
-  }, [filteredOrders]);
+  const orderStatusSummary = useMemo(
+    () =>
+      filteredOrders.reduce<Record<string, number>>((accumulator, order) => {
+        accumulator[order.status] = (accumulator[order.status] || 0) + 1;
+        return accumulator;
+      }, {}),
+    [filteredOrders],
+  );
 
-  const paymentStatusSummary = useMemo(() => {
-    return filteredOrders.reduce<Record<string, number>>((accumulator, order) => {
-      accumulator[order.paymentVerificationStatus] = (accumulator[order.paymentVerificationStatus] || 0) + 1;
-      return accumulator;
-    }, {});
-  }, [filteredOrders]);
+  const paymentStatusSummary = useMemo(
+    () =>
+      filteredOrders.reduce<Record<string, number>>((accumulator, order) => {
+        accumulator[order.paymentVerificationStatus] = (accumulator[order.paymentVerificationStatus] || 0) + 1;
+        return accumulator;
+      }, {}),
+    [filteredOrders],
+  );
 
   const inventorySummary = useMemo(() => {
     const availableProducts = products.filter((product) => product.status !== 'غير متوفر').length;
@@ -192,7 +202,7 @@ const ReportsPage: React.FC = () => {
 
   const renderSalesReport = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className={summaryGridClass}>
         <SummaryCard label="إجمالي المبيعات" value={`$${salesSummary.totalRevenue.toFixed(2)}`} accent="green" icon="💰" />
         <SummaryCard label="عدد الطلبات" value={String(salesSummary.totalOrders)} accent="blue" icon="📦" />
         <SummaryCard label="متوسط الطلب" value={`$${salesSummary.averageOrderValue.toFixed(2)}`} accent="amber" icon="📈" />
@@ -216,7 +226,7 @@ const ReportsPage: React.FC = () => {
 
   const renderOrdersReport = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className={summaryGridClass}>
         <SummaryCard label="قيد المعالجة" value={String(orderStatusSummary['قيد المعالجة'] || 0)} accent="amber" icon="⏳" />
         <SummaryCard label="تم التأكيد" value={String(orderStatusSummary['تم التأكيد'] || 0)} accent="indigo" icon="📋" />
         <SummaryCard label="تم الشحن" value={String(orderStatusSummary['تم الشحن'] || 0)} accent="blue" icon="🚚" />
@@ -243,11 +253,25 @@ const ReportsPage: React.FC = () => {
 
   const renderCustomersReport = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className={summaryGridClass}>
         <SummaryCard label="عدد العملاء النشطين" value={String(customerSummary.length)} accent="blue" icon={<UserIcon className="h-6 w-6" />} />
         <SummaryCard label="إجمالي المستخدمين" value={String(users.length)} accent="purple" icon="👥" />
-        <SummaryCard label="أعلى إنفاق" value={customerSummary[0] ? `$${customerSummary[0].totalSpent.toFixed(2)}` : '$0.00'} accent="amber" icon="🏆" />
-        <SummaryCard label="متوسط إنفاق العميل" value={customerSummary.length ? `$${(customerSummary.reduce((sum, customer) => sum + customer.totalSpent, 0) / customerSummary.length).toFixed(2)}` : '$0.00'} accent="green" icon="📈" />
+        <SummaryCard
+          label="أعلى إنفاق"
+          value={customerSummary[0] ? `$${customerSummary[0].totalSpent.toFixed(2)}` : '$0.00'}
+          accent="amber"
+          icon="🏆"
+        />
+        <SummaryCard
+          label="متوسط إنفاق العميل"
+          value={
+            customerSummary.length
+              ? `$${(customerSummary.reduce((sum, customer) => sum + customer.totalSpent, 0) / customerSummary.length).toFixed(2)}`
+              : '$0.00'
+          }
+          accent="green"
+          icon="📈"
+        />
       </div>
 
       <Card title="أفضل العملاء">
@@ -268,7 +292,7 @@ const ReportsPage: React.FC = () => {
 
   const renderInventoryReport = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className={summaryGridClass}>
         <SummaryCard label="إجمالي الزواحف" value={String(inventorySummary.totalProducts)} accent="green" icon={<PackageIcon className="h-6 w-6" />} />
         <SummaryCard label="زواحف متاحة" value={String(inventorySummary.availableProducts)} accent="blue" icon="🦎" />
         <SummaryCard label="إجمالي المستلزمات" value={String(inventorySummary.totalSupplies)} accent="amber" icon="📦" />
@@ -292,7 +316,7 @@ const ReportsPage: React.FC = () => {
 
   const renderPerformanceReport = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className={summaryGridClass}>
         <SummaryCard label="نسبة قبول الدفع" value={`${performanceSummary.paymentAcceptanceRate.toFixed(1)}%`} accent="green" icon="✅" />
         <SummaryCard label="نسبة رفض الدفع" value={`${performanceSummary.paymentRejectionRate.toFixed(1)}%`} accent="red" icon="❌" />
         <SummaryCard label="نسبة إتمام التسليم" value={`${performanceSummary.deliveryCompletionRate.toFixed(1)}%`} accent="blue" icon="🚚" />
@@ -333,17 +357,20 @@ const ReportsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="animate-fade-in space-y-8">
       <div className="mb-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
         <div>
-          <h1 className="text-4xl font-black">التقارير</h1>
-          <p className="mt-2 text-gray-400">تقارير تشغيلية مباشرة مبنية على الطلبات والمنتجات والمستلزمات والعملاء ضمن الفترة الزمنية المحددة.</p>
+          <h1 className="text-3xl font-black sm:text-4xl">التقارير</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-400 sm:text-base">
+            تقارير تشغيلية مباشرة مبنية على الطلبات والعملاء والمخزون، مع عرض مناسب للموبايل والتابلت دون إخفاء أي
+            بيانات أساسية.
+          </p>
         </div>
         <HelpButton onClick={() => setIsHelpOpen(true)} />
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 p-6 glass-medium">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="rounded-[2rem] border border-white/10 p-4 glass-medium sm:p-6">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-400">الفترة</label>
             <select
@@ -396,8 +423,9 @@ const ReportsPage: React.FC = () => {
         {reportTypes.map((report) => (
           <button
             key={report.value}
+            type="button"
             onClick={() => setSelectedReport(report.value)}
-            className={`rounded-xl px-4 py-2 text-sm font-black transition-all ${
+            className={`w-full rounded-xl px-4 py-3 text-sm font-black transition-all sm:w-auto ${
               selectedReport === report.value
                 ? 'bg-amber-500 text-gray-900'
                 : 'border border-white/10 bg-white/5 text-gray-300 hover:border-amber-500/40 hover:text-white'
@@ -438,23 +466,23 @@ const accentMap: Record<SummaryCardProps['accent'], string> = {
 };
 
 const SummaryCard: React.FC<SummaryCardProps> = ({ label, value, accent, icon }) => (
-  <div className="rounded-2xl border border-white/10 p-6 glass-medium">
-    <div className="flex items-center justify-between">
-      <div>
+  <div className="rounded-2xl border border-white/10 p-4 glass-medium sm:p-6">
+    <div className="flex items-start justify-between gap-4">
+      <div className="min-w-0">
         <p className="text-sm text-gray-400">{label}</p>
-        <p className="text-2xl font-black text-white">{value}</p>
+        <p className="mt-2 break-words text-2xl font-black text-white">{value}</p>
       </div>
-      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${accentMap[accent]}`}>{icon}</div>
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${accentMap[accent]}`}>{icon}</div>
     </div>
   </div>
 );
 
 const Card: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="overflow-hidden rounded-2xl border border-white/10 glass-medium">
-    <div className="border-b border-white/10 p-6">
+    <div className="border-b border-white/10 p-4 sm:p-6">
       <h3 className="text-lg font-black text-white">{title}</h3>
     </div>
-    <div className="p-0">{children}</div>
+    <div>{children}</div>
   </div>
 );
 
@@ -464,33 +492,51 @@ const DataTable: React.FC<{
   emptyLabel: string;
 }> = ({ headers, rows, emptyLabel }) => {
   if (!rows.length) {
-    return <div className="p-10 text-center font-bold text-gray-500">{emptyLabel}</div>;
+    return <div className="p-8 text-center font-bold text-gray-500 sm:p-10">{emptyLabel}</div>;
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead className="bg-white/5">
-          <tr>
-            {headers.map((header) => (
-              <th key={header} className="p-4 text-right text-sm font-black uppercase tracking-widest text-gray-400">
-                {header}
-              </th>
+    <div>
+      <div className="grid gap-3 p-4 sm:p-6 lg:hidden">
+        {rows.map((row, index) => (
+          <article key={index} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+            {row.map((cell, cellIndex) => (
+              <div
+                key={`${index}-${cellIndex}`}
+                className="flex items-start justify-between gap-4 border-b border-white/10 py-3 first:pt-0 last:border-b-0 last:pb-0"
+              >
+                <span className="text-xs font-black uppercase tracking-widest text-gray-500">{headers[cellIndex]}</span>
+                <span className="max-w-[65%] text-left text-sm font-medium text-white">{cell}</span>
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={index} className="border-b border-white/5 transition-colors hover:bg-white/5">
-              {row.map((cell, cellIndex) => (
-                <td key={`${index}-${cellIndex}`} className="p-4 text-white">
-                  {cell}
-                </td>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="min-w-[760px] w-full">
+          <thead className="bg-white/5">
+            <tr>
+              {headers.map((header) => (
+                <th key={header} className="p-4 text-right text-sm font-black uppercase tracking-widest text-gray-400">
+                  {header}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => (
+              <tr key={index} className="border-b border-white/5 transition-colors hover:bg-white/5">
+                {row.map((cell, cellIndex) => (
+                  <td key={`${index}-${cellIndex}`} className="p-4 text-white">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
