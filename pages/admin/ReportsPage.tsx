@@ -357,7 +357,7 @@ const ReportsPage: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-8 overflow-hidden">
       <div className="mb-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-black sm:text-4xl">التقارير</h1>
@@ -417,7 +417,7 @@ const ReportsPage: React.FC = () => {
           <div className="flex items-end">
             <div className="relative w-full">
               <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-              <div className="rounded-xl border border-white/10 bg-white/5 py-3 pr-4 pl-12 text-sm text-gray-400">
+              <div className="rounded-xl border border-white/10 bg-white/5 py-3 pr-4 pl-12 text-sm text-gray-400 break-words">
                 {filteredOrders.length} طلب داخل التقرير الحالي
               </div>
             </div>
@@ -425,13 +425,13 @@ const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {reportTypes.map((report) => (
           <button
             key={report.value}
             type="button"
             onClick={() => setSelectedReport(report.value)}
-            className={`w-full rounded-xl px-4 py-3 text-sm font-black transition-all sm:w-auto ${
+            className={`w-full rounded-xl px-4 py-3 text-sm font-black transition-all ${
               selectedReport === report.value
                 ? 'bg-amber-500 text-gray-900'
                 : 'border border-white/10 bg-white/5 text-gray-300 hover:border-amber-500/40 hover:text-white'
@@ -512,7 +512,7 @@ const DataTable: React.FC<{
                 className="flex items-start justify-between gap-4 border-b border-white/10 py-3 first:pt-0 last:border-b-0 last:pb-0"
               >
                 <span className="text-xs font-black uppercase tracking-widest text-gray-500">{headers[cellIndex]}</span>
-                <span className="max-w-[65%] text-left text-sm font-medium text-white">{cell}</span>
+                <span className="max-w-[65%] break-words text-left text-sm font-medium text-white">{cell}</span>
               </div>
             ))}
           </article>
@@ -534,7 +534,7 @@ const DataTable: React.FC<{
             {rows.map((row, index) => (
               <tr key={index} className="border-b border-white/5 transition-colors hover:bg-white/5">
                 {row.map((cell, cellIndex) => (
-                  <td key={`${index}-${cellIndex}`} className="p-4 text-white">
+                  <td key={`${index}-${cellIndex}`} className="p-4 align-top break-words text-white">
                     {cell}
                   </td>
                 ))}
